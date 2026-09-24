@@ -1,17 +1,11 @@
+using Q.Sock.Server;
+
 var builder = WebApplication.CreateBuilder(args);
 
-
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-    app.MapOpenApi();
+app.MapHub<ChatHub>("/chat");
 
-app.UseHttpsRedirection()
-    .UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+app.Run("http://localhost:5000");
