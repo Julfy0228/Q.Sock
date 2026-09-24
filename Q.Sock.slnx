@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Q.Sock.Server/Q.Sock.Server.csproj" Id="581f5b6e-ec1c-47c9-8bbf-77226f575507" />
+  <Project Path="Q.Sock/Q.Sock.Client.csproj" />
+</Solution>
