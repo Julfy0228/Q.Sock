@@ -30,7 +30,7 @@
             <!-- Список пользователей онлайн -->
             <DockPanel Grid.Column="1">
                 <TextBlock Text="Онлайн:" DockPanel.Dock="Top" FontWeight="Bold" Margin="0,0,0,5"/>
-                <ListBox x:Name="UsersListBox"/>
+                <ListBox x:Name="UsersListBox" DisplayMemberPath="Name"/>
             </DockPanel>
         </Grid>
 

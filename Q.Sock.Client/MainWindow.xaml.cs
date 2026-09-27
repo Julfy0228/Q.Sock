@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.AspNetCore.SignalR.Client;
-using Q.Sock.Shared;
+using Q.Sock.Shared.Models;
 
 namespace Q.Sock.Client;
 
@@ -10,8 +10,8 @@ public partial class MainWindow : Window
 {
     private HubConnection? _connection;
 
-    public ObservableCollection<MessageModel> Messages { get; } = [];
-    public ObservableCollection<string> Users { get; } = [];
+    public ObservableCollection<Message> Messages { get; } = [];
+    public ObservableCollection<User> Users { get; } = [];
 
     private const string ServerUrl = "http://localhost:5000/chat";
 
@@ -38,12 +38,12 @@ public partial class MainWindow : Window
             .WithAutomaticReconnect()
             .Build();
 
-        _connection.On<MessageModel>("ReceiveMessage", (message) =>
+        _connection.On<Message>("ReceiveMessage", (message) =>
         {
             Dispatcher.Invoke(() => Messages.Add(message));
         });
 
-        _connection.On<List<MessageModel>>("ReceiveHistory", (history) =>
+        _connection.On<List<Message>>("ReceiveHistory", (history) =>
         {
             Dispatcher.Invoke(() =>
             {
@@ -53,7 +53,7 @@ public partial class MainWindow : Window
             });
         });
 
-        _connection.On<List<string>>("UpdateUsersList", (usersList) =>
+        _connection.On<List<User>>("UpdateUsersList", (usersList) =>
         {
             Dispatcher.Invoke(() =>
             {
