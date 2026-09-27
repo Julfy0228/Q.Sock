@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace Q.Sock.Server.Entities;
 
-public sealed class UserEntity
+public sealed class UserEntity : IdentityUser<Guid>
 {
-    public required Guid Id { get; init; }
-    public required string Name { get; set; }
+    public new required Guid Id { get; init; }
+    public new required string UserName { get; set; }
 }

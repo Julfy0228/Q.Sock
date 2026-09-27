@@ -11,9 +11,12 @@
 
         <!-- Панель входа / подключения -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBlock Text="Ваш ник:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBlock Text="Логин:" VerticalAlignment="Center" Margin="0,0,5,0"/>
             <TextBox x:Name="UsernameTextBox" Width="150" Margin="0,0,10,0" Text="User1"/>
-            <Button x:Name="ConnectButton" Content="Подключиться" Width="120" Click="ConnectButton_Click"/>
+            <TextBlock Text="Пароль:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <PasswordBox x:Name="PasswordTextBox" Width="120" Margin="0,0,10,0"/>
+            <Button x:Name="ConnectButton" Content="Войти" Width="90" Click="ConnectButton_Click"/>
+            <Button x:Name="RegisterButton" Content="Регистрация" Width="110" Click="RegisterButton_Click" Margin="0,0,10,0"/>
             <TextBlock x:Name="StatusTextBlock" Text="Не подключено" Foreground="Red" VerticalAlignment="Center" Margin="10,0,0,0"/>
         </StackPanel>
 

@@ -1,33 +1,34 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Q.Sock.Server.Data;
 using Q.Sock.Server.Entities;
 using Q.Sock.Shared.Models;
 
-namespace Q.Sock.Server;
+namespace Q.Sock.Server.Hubs;
 
-public class ChatHub(IDbContextFactory<ChatDbContext> dbContextFactory) : Hub
+[Authorize]
+public sealed class ChatHub(IDbContextFactory<ChatDbContext> dbContextFactory) : Hub
 {
     private static readonly Dictionary<string, Guid> ConnectedUsers = [];
     private static readonly Lock UsersLock = new();
 
-    public async Task RegisterUser(string username)
+    public override async Task OnConnectedAsync()
     {
-        username = username.Trim();
-        if (string.IsNullOrWhiteSpace(username))
-            throw new HubException("Имя пользователя не может быть пустым.");
+        var userId = GetUserId();
 
         await using var db = await dbContextFactory.CreateDbContextAsync();
-        var user = await db.Users.SingleOrDefaultAsync(item => item.Name == username);
-        if (user is null)
-        {
-            user = new UserEntity { Id = Guid.NewGuid(), Name = username };
-            db.Users.Add(user);
-            await db.SaveChangesAsync();
-        }
+        var user = await db.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == userId)
+            ?? throw new HubException("Пользователь не найден.");
+        var username = user.UserName ?? "Пользователь";
+        bool wasOnline;
 
         lock (UsersLock)
         {
+            wasOnline = ConnectedUsers.ContainsValue(user.Id);
             ConnectedUsers[Context.ConnectionId] = user.Id;
         }
 
@@ -37,22 +38,27 @@ public class ChatHub(IDbContextFactory<ChatDbContext> dbContextFactory) : Hub
                 (message, sender) => new Message
                 {
                     Id = message.Id,
-                    SenderName = sender.Name,
+                    SenderName = sender.UserName ?? "Неизвестный пользователь",
                     Text = message.Text,
                     SentAt = message.SentAt
                 })
             .ToListAsync();
 
-            history = history.OrderBy(message => message.SentAt).ToList();
-
-        await Clients.Caller.SendAsync("ReceiveHistory", history);
+        await Clients.Caller.SendAsync("ReceiveHistory", history.OrderBy(message => message.SentAt));
         await BroadcastUsersAsync();
 
-        await Clients.All.SendAsync("ReceiveMessage", new Message
+        if (!wasOnline)
         {
-            Id = Guid.NewGuid(), SenderName = "Система",
-            Text = $"{username} вошел в чат", SentAt = DateTimeOffset.Now
-        });
+            await Clients.All.SendAsync("ReceiveMessage", new Message
+            {
+                Id = Guid.NewGuid(),
+                SenderName = "Система",
+                Text = $"{username} вошел в чат",
+                SentAt = DateTimeOffset.Now
+            });
+        }
+
+        await base.OnConnectedAsync();
     }
 
     public async Task SendMessage(string messageText)
@@ -60,12 +66,7 @@ public class ChatHub(IDbContextFactory<ChatDbContext> dbContextFactory) : Hub
         if (string.IsNullOrWhiteSpace(messageText))
             return;
 
-        Guid senderId;
-        lock (UsersLock)
-        {
-            if (!ConnectedUsers.TryGetValue(Context.ConnectionId, out senderId))
-                return;
-        }
+        var senderId = GetUserId();
 
         await using var db = await dbContextFactory.CreateDbContextAsync();
         var entity = new MessageEntity
@@ -77,7 +78,8 @@ public class ChatHub(IDbContextFactory<ChatDbContext> dbContextFactory) : Hub
         await db.SaveChangesAsync();
 
         var senderName = await db.Users.Where(user => user.Id == senderId)
-            .Select(user => user.Name).SingleAsync();
+            .Select(user => user.UserName).SingleOrDefaultAsync()
+            ?? throw new HubException("Пользователь не найден.");
 
         await Clients.All.SendAsync("ReceiveMessage", new Message
         {
@@ -89,19 +91,23 @@ public class ChatHub(IDbContextFactory<ChatDbContext> dbContextFactory) : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         Guid? userId = null;
+        var userStillOnline = false;
         lock (UsersLock)
         {
             if (ConnectedUsers.Remove(Context.ConnectionId, out var removedId))
+            {
                 userId = removedId;
+                userStillOnline = ConnectedUsers.ContainsValue(removedId);
+            }
         }
 
         if (userId.HasValue)
         {
             await using var db = await dbContextFactory.CreateDbContextAsync();
             var username = await db.Users.Where(user => user.Id == userId.Value)
-                .Select(user => user.Name).SingleOrDefaultAsync();
+                .Select(user => user.UserName).SingleOrDefaultAsync();
             await BroadcastUsersAsync();
-            if (username is not null)
+            if (!userStillOnline && username is not null)
                 await Clients.All.SendAsync("ReceiveMessage", new Message
                 {
                     Id = Guid.NewGuid(), SenderName = "Система",
@@ -116,13 +122,25 @@ public class ChatHub(IDbContextFactory<ChatDbContext> dbContextFactory) : Hub
     {
         Guid[] ids;
         lock (UsersLock)
-            ids = ConnectedUsers.Values.Distinct().ToArray();
+            ids = [.. ConnectedUsers.Values.Distinct()];
 
         await using var db = await dbContextFactory.CreateDbContextAsync();
         var users = await db.Users.AsNoTracking().Where(user => ids.Contains(user.Id))
-            .OrderBy(user => user.Name)
-            .Select(user => new User { Id = user.Id, Name = user.Name })
+            .OrderBy(user => user.UserName)
+            .Select(user => new User
+            {
+                Id = user.Id,
+                UserName = user.UserName ?? "Неизвестный пользователь"
+            })
             .ToListAsync();
         await Clients.All.SendAsync("UpdateUsersList", users);
+    }
+
+    private Guid GetUserId()
+    {
+        var value = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(value, out var userId)
+            ? userId
+            : throw new HubException("Пользователь не авторизован.");
     }
 }

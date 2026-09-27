@@ -1,21 +1,23 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Q.Sock.Server.Entities;
 
 namespace Q.Sock.Server.Data;
 
-public sealed class ChatDbContext(DbContextOptions<ChatDbContext> options) : DbContext(options)
+public sealed class ChatDbContext(DbContextOptions<ChatDbContext> options)
+    : IdentityDbContext<UserEntity, IdentityRole<Guid>, Guid>(options)
 {
-    public DbSet<UserEntity> Users => Set<UserEntity>();
     public DbSet<MessageEntity> Messages => Set<MessageEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<UserEntity>(entity =>
-        {
-            entity.HasKey(user => user.Id);
-            entity.Property(user => user.Name).IsRequired().HasMaxLength(32);
-            entity.HasIndex(user => user.Name).IsUnique();
-        });
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<UserEntity>()
+            .Property(user => user.UserName)
+            .IsRequired()
+            .HasMaxLength(32);
 
         modelBuilder.Entity<MessageEntity>(entity =>
         {

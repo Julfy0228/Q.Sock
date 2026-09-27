@@ -1,7 +1,10 @@
 ﻿using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.AspNetCore.SignalR.Client;
+using Q.Sock.Shared.Models.Auth;
 using Q.Sock.Shared.Models;
 
 namespace Q.Sock.Client;
@@ -9,11 +12,13 @@ namespace Q.Sock.Client;
 public partial class MainWindow : Window
 {
     private HubConnection? _connection;
+    private string? _accessToken;
 
     public ObservableCollection<Message> Messages { get; } = [];
     public ObservableCollection<User> Users { get; } = [];
 
     private const string ServerUrl = "http://localhost:5000/chat";
+    private const string ApiUrl = "http://localhost:5000";
 
     public MainWindow()
     {
@@ -24,17 +29,71 @@ public partial class MainWindow : Window
 
     private async void ConnectButton_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(UsernameTextBox.Text))
+        await AuthenticateAsync(isRegistration: false);
+    }
+
+    private async void RegisterButton_Click(object sender, RoutedEventArgs e)
+    {
+        await AuthenticateAsync(isRegistration: true);
+    }
+
+    private async Task AuthenticateAsync(bool isRegistration)
+    {
+        if (string.IsNullOrWhiteSpace(UsernameTextBox.Text) || string.IsNullOrWhiteSpace(PasswordTextBox.Password))
         {
-            MessageBox.Show("Введите никнейм!");
+            MessageBox.Show("Введите логин и пароль!");
             return;
         }
 
         ConnectButton.IsEnabled = false;
+        RegisterButton.IsEnabled = false;
         UsernameTextBox.IsEnabled = false;
+        PasswordTextBox.IsEnabled = false;
+
+        try
+        {
+            using var httpClient = new HttpClient();
+            HttpResponseMessage response;
+            if (isRegistration)
+            {
+                response = await httpClient.PostAsJsonAsync($"{ApiUrl}/api/auth/register", new RegisterRequest
+                {
+                    UserName = UsernameTextBox.Text,
+                    Password = PasswordTextBox.Password
+                });
+            }
+            else
+            {
+                response = await httpClient.PostAsJsonAsync($"{ApiUrl}/api/auth/login", new LoginRequest
+                {
+                    UserName = UsernameTextBox.Text,
+                    Password = PasswordTextBox.Password
+                });
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(body) ? "Ошибка сервера." : body);
+            }
+
+            var auth = await response.Content.ReadFromJsonAsync<AuthResponse>()
+                ?? throw new InvalidOperationException("Сервер не вернул токен.");
+
+            _accessToken = auth.AccessToken;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Ошибка авторизации: {ex.Message}");
+            ConnectButton.IsEnabled = true;
+            RegisterButton.IsEnabled = true;
+            UsernameTextBox.IsEnabled = true;
+            PasswordTextBox.IsEnabled = true;
+            return;
+        }
 
         _connection = new HubConnectionBuilder()
-            .WithUrl(ServerUrl)
+            .WithUrl(ServerUrl, options => options.AccessTokenProvider = () => Task.FromResult<string?>(_accessToken))
             .WithAutomaticReconnect()
             .Build();
 
@@ -66,7 +125,6 @@ public partial class MainWindow : Window
         try
         {
             await _connection.StartAsync();
-            await _connection.InvokeAsync("RegisterUser", UsernameTextBox.Text);
 
             StatusTextBlock.Text = "Подключено";
             StatusTextBlock.Foreground = System.Windows.Media.Brushes.Green;
@@ -78,7 +136,9 @@ public partial class MainWindow : Window
             MessageBox.Show($"Ошибка подключения к серверу: {ex.Message}");
             StatusTextBlock.Text = "Ошибка";
             ConnectButton.IsEnabled = true;
+            RegisterButton.IsEnabled = true;
             UsernameTextBox.IsEnabled = true;
+            PasswordTextBox.IsEnabled = true;
         }
     }
 

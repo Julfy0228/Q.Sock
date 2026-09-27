@@ -1,6 +1,19 @@
-@Q.Sock.Server_HostAddress = http://localhost:5134
+@Q.Sock.Server_HostAddress = http://localhost:5000
 
-GET {{Q.Sock.Server_HostAddress}}/weatherforecast/
-Accept: application/json
+### Register
+POST {{Q.Sock.Server_HostAddress}}/api/auth/register
+Content-Type: application/json
 
-###
+{
+  "username": "testuser",
+  "password": "TestPass123!"
+}
+
+### Login
+POST {{Q.Sock.Server_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "TestPass123!"
+}
