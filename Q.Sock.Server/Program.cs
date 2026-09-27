@@ -17,7 +17,12 @@ builder.Services.AddDbContextFactory<ChatDbContext>(options =>
 builder.Services.AddIdentityCore<UserEntity>(options =>
 {
 	options.User.RequireUniqueEmail = false;
-	options.Password.RequiredLength = 8;
+	options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	options.Password.RequiredLength = 4;
+	options.Password.RequireDigit = false;
+	options.Password.RequireNonAlphanumeric = false;
+	options.Password.RequireUppercase = false;
+	options.Password.RequireLowercase = false;
 })
 	.AddRoles<IdentityRole<Guid>>()
 	.AddEntityFrameworkStores<ChatDbContext>()

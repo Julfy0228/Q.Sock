@@ -1,9 +1,84 @@
-﻿<Application x:Class="Q.Sock.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Q.Sock"
-             StartupUri="MainWindow.xaml">
+             xmlns:fluent="clr-namespace:Avalonia.Themes.Fluent;assembly=Avalonia.Themes.Fluent"
+             x:Class="Q.Sock.Client.App"
+             RequestedThemeVariant="Dark">
     <Application.Resources>
-         
+        <SolidColorBrush x:Key="AccentBrush" Color="#007ACC" />
+        <SolidColorBrush x:Key="AccentHoverBrush" Color="#0062A3" />
+        <SolidColorBrush x:Key="DangerBrush" Color="#D9534F" />
+        <SolidColorBrush x:Key="DangerHoverBrush" Color="#C5413B" />
+        <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#313338" />
+        <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#2B2D31" />
+        <SolidColorBrush x:Key="ProfileBackgroundBrush" Color="#232428" />
+        <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#1E1F22" />
+        <SolidColorBrush x:Key="InputBackgroundBrush" Color="#383A40" />
+        <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F2F3F5" />
+        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#B5BAC1" />
+        <SolidColorBrush x:Key="MutedTextBrush" Color="#949BA4" />
+        <SolidColorBrush x:Key="MessageTextBrush" Color="#DBDEE1" />
+        <SolidColorBrush x:Key="AvatarBrush" Color="#007ACC" />
+        <SolidColorBrush x:Key="SeparatorBrush" Color="#3F4147" />
+        <SolidColorBrush x:Key="SelectionBrush" Color="#404249" />
+        <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#4E5058" />
+        <SolidColorBrush x:Key="ButtonHoverBrush" Color="#5D5F66" />
+        <BoxShadows x:Key="PopupShadow">0 8 16 0 #80000000</BoxShadows>
     </Application.Resources>
+
+    <Application.Styles>
+        <fluent:FluentTheme />
+
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+        </Style>
+        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentHoverBrush}" />
+        </Style>
+
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+        </Style>
+
+        <Style Selector="Button.danger">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}" />
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ButtonHoverBrush}" />
+        </Style>
+
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="8,6" />
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SelectionBrush}" />
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SelectionBrush}" />
+        </Style>
+    </Application.Styles>
 </Application>

@@ -243,6 +243,12 @@ ClientBin/
 *.db
 *.db-shm
 *.db-wal
+
+# Local encrypted account storage for the desktop client
+accounts.dat
+
+# Local publish output
+artifacts/
 orleans.codegen.cs
 
 # Including strong name files can present a security risk
