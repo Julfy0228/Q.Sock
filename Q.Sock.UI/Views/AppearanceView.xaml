@@ -1,0 +1,49 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:Q.Sock.UI.ViewModels"
+    x:Class="Q.Sock.UI.Views.AppearanceView"
+    x:DataType="vm:AppearanceViewModel"
+    x:CompileBindings="True"
+    Design.Width="560"
+    Design.Height="850"
+    Background="{DynamicResource background}"
+>
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource text}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="LineHeight" Value="19.6" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="{DynamicResource muted}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="LineHeight" Value="16.8" />
+        </Style>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="LineHeight" Value="28" />
+        </Style>
+    </UserControl.Styles>
+    <StackPanel Spacing="12">
+        <TextBox PlaceholderText="Название темы" Text="{Binding Name, Mode=TwoWay}" />
+        <ItemsControl ItemsSource="{Binding Colors}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="12" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ThemeColorItem">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="{Binding Label}" />
+                        <TextBox PlaceholderText="#RRGGBB" Text="{Binding Value, Mode=TwoWay}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Content="Применить" Command="{Binding ApplyCommand}" />
+        <Button Content="Сбросить тему" Command="{Binding ResetCommand}" />
+    </StackPanel>
+</UserControl>

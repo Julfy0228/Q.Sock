@@ -11,6 +11,8 @@ using Q.Sock.Core;
 using Q.Sock.Plugins.Moodle;
 using Q.Sock.UI;
 using Q.Sock.UI.Plugins;
+using Q.Sock.UI.ViewModels;
+using Q.Sock.UI.Views;
 
 AppBuilder
     .Configure<Application>()
@@ -20,6 +22,8 @@ AppBuilder
 
 Application.Current!.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
 Application.Current.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
+
+XamlViewChecks.Run();
 
 Check(MaterialIcon.Names.Count == 10750, "Каталог MUI обрезан.");
 foreach (var name in MaterialIcon.Names)
@@ -135,19 +139,19 @@ if (output is not null)
 if (output is not null)
 {
     Capture(
-        new MessengerView(new EmptyAccounts(), preferences: new EmptyPreferences()),
+        new LoginView { DataContext = new LoginViewModel { ServerUrl = "http://127.0.0.1:5210" } },
         320,
         640,
         "login-compact"
     );
     Capture(
-        new MessengerView(new EmptyAccounts(), preferences: new EmptyPreferences()),
+        new LoginView { DataContext = new LoginViewModel { ServerUrl = "http://127.0.0.1:5210" } },
         390,
         844,
         "login-narrow"
     );
     Capture(
-        new MessengerView(new EmptyAccounts(), preferences: new EmptyPreferences()),
+        new LoginView { DataContext = new LoginViewModel { ServerUrl = "http://127.0.0.1:5210" } },
         1000,
         844,
         "login-wide"
@@ -168,6 +172,33 @@ if (output is not null)
     );
     Capture(new LessonPlanningView(context), 390, 844, "lesson-narrow");
     Capture(new LessonPlanningView(context), 1000, 844, "lesson-wide");
+    Capture(
+        new SettingsView { DataContext = new SettingsViewModel() },
+        390,
+        1000,
+        "settings-narrow"
+    );
+    Capture(new SettingsView { DataContext = new SettingsViewModel() }, 600, 1000, "settings-wide");
+    Capture(
+        new AppearanceView
+        {
+            DataContext = new AppearanceViewModel(
+                new MessengerTheme(),
+                _ => Task.CompletedTask,
+                () => Task.CompletedTask
+            ),
+        },
+        390,
+        1000,
+        "appearance-narrow"
+    );
+    var workspace = new WorkspaceView();
+    workspace.SetLayout(1280, false, false);
+    Capture(workspace, 1280, 820, "workspace-wide");
+    workspace = new WorkspaceView();
+    workspace.SetLayout(390, false, false);
+    Capture(workspace, 390, 844, "workspace-narrow");
+
     var palette = new WrapPanel
     {
         Margin = new Thickness(24),
@@ -201,7 +232,7 @@ void Capture(Control view, int width, int height, string name)
         Background = Brush.Parse("#313338"),
         Padding = name.StartsWith("lesson") ? new Thickness(24) : default,
     };
-    if (name.StartsWith("lesson"))
+    if (name.StartsWith("lesson") || name.StartsWith("settings") || name.StartsWith("appearance"))
     {
         host.Styles.Add(new MessengerStyles());
         MessengerStyles.ApplyPalette(host, new MessengerTheme());
@@ -216,7 +247,14 @@ void Capture(Control view, int width, int height, string name)
         };
     }
     else
+    {
+        if (name.StartsWith("workspace") || name.StartsWith("login"))
+        {
+            host.Styles.Add(new MessengerStyles());
+            MessengerStyles.ApplyPalette(host, new MessengerTheme());
+        }
         host.Child = view;
+    }
     var window = new Window
     {
         Content = host,
@@ -274,22 +312,6 @@ static void Check(bool condition, string message)
 {
     if (!condition)
         throw new InvalidOperationException(message);
-}
-
-sealed class EmptyAccounts : IAccountRepository
-{
-    public Task<List<SavedAccount>> LoadAsync() => Task.FromResult(new List<SavedAccount>());
-
-    public Task SaveAsync(IEnumerable<SavedAccount> accounts) => Task.CompletedTask;
-
-    public Task<string> GetOrCreateDeviceIdAsync() => Task.FromResult("ui-fixture-device");
-}
-
-sealed class EmptyPreferences : IClientPreferences
-{
-    public Task<string?> Read(string key) => Task.FromResult<string?>(null);
-
-    public Task Write(string key, string value) => Task.CompletedTask;
 }
 
 sealed class CourseFixture : HttpMessageHandler

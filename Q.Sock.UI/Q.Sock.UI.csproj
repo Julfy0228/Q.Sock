@@ -14,5 +14,11 @@
     </ItemGroup>
     <ItemGroup>
         <AvaloniaResource Include="Resources/**" />
+        <AvaloniaXaml Include="**/*.xaml" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="**/*.xaml.cs">
+            <DependentUpon>$([System.IO.Path]::GetFileNameWithoutExtension('%(Identity)'))</DependentUpon>
+        </Compile>
     </ItemGroup>
 </Project>

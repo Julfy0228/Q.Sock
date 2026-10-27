@@ -1,0 +1,186 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:Q.Sock.UI.ViewModels"
+    x:Class="Q.Sock.UI.Views.LoginView"
+    x:DataType="vm:LoginViewModel"
+    x:CompileBindings="True"
+    Design.Width="1000"
+    Design.Height="844"
+    Background="{DynamicResource background}"
+>
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource text}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="LineHeight" Value="19.6" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="{DynamicResource muted}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="LineHeight" Value="16.8" />
+        </Style>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="LineHeight" Value="28" />
+        </Style>
+    </UserControl.Styles>
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <Grid x:Name="Viewport">
+            <StackPanel
+                x:Name="Form"
+                Width="342"
+                MaxWidth="342"
+                Margin="24,36"
+                Spacing="18"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+            >
+                <Border
+                    Width="58"
+                    Height="58"
+                    CornerRadius="29"
+                    HorizontalAlignment="Left"
+                    Background="{DynamicResource accent}"
+                >
+                    <TextBlock
+                        Text="М"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                    />
+                </Border>
+                <TextBlock
+                    Text="Мессенджер"
+                    FontSize="28"
+                    LineHeight="39.2"
+                    FontWeight="SemiBold"
+                />
+                <TextBlock
+                    Text="Личные чаты, группы и пространства"
+                    Foreground="{DynamicResource secondary}"
+                />
+                <Border Height="12" />
+                <TextBlock Text="Вход" FontSize="16" LineHeight="22.4" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding Hint}" Classes="muted" />
+                <Separator />
+                <TextBlock Text="Учётная запись сервера" FontWeight="SemiBold" />
+                <Grid IsVisible="{Binding ShowServer}">
+                    <TextBox
+                        x:Name="ServerUrlInput"
+                        Margin="0,8,0,0"
+                        PlaceholderText="Адрес сервера"
+                        Text="{Binding ServerUrl, Mode=TwoWay}"
+                        LostFocus="ServerLostFocus"
+                    />
+                    <Border
+                        Padding="4,0"
+                        Margin="12,0,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Background="{DynamicResource background}"
+                        IsHitTestVisible="False"
+                    >
+                        <TextBlock
+                            Text="Сервер"
+                            Classes="muted"
+                            Foreground="{DynamicResource secondary}"
+                        />
+                    </Border>
+                </Grid>
+                <Grid>
+                    <TextBox
+                        x:Name="UserNameInput"
+                        Margin="0,8,0,0"
+                        PlaceholderText="Логин"
+                        Text="{Binding UserName, Mode=TwoWay}"
+                    />
+                    <Border
+                        Padding="4,0"
+                        Margin="12,0,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Background="{DynamicResource background}"
+                        IsHitTestVisible="False"
+                    >
+                        <TextBlock
+                            Text="Логин"
+                            Classes="muted"
+                            Foreground="{DynamicResource secondary}"
+                        />
+                    </Border>
+                </Grid>
+                <Grid>
+                    <TextBox
+                        x:Name="PasswordInput"
+                        Margin="0,8,0,0"
+                        PlaceholderText="Пароль"
+                        Text="{Binding Password, Mode=TwoWay}"
+                        PasswordChar="●"
+                        KeyDown="PasswordKeyDown"
+                    />
+                    <Border
+                        Padding="4,0"
+                        Margin="12,0,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Background="{DynamicResource background}"
+                        IsHitTestVisible="False"
+                    >
+                        <TextBlock
+                            Text="Пароль"
+                            Classes="muted"
+                            Foreground="{DynamicResource secondary}"
+                        />
+                    </Border>
+                </Grid>
+                <Button
+                    Content="Войти"
+                    Classes="primary"
+                    Command="{Binding LoginCommand}"
+                    HorizontalAlignment="Center"
+                    Margin="0,4,0,0"
+                />
+                <Button
+                    Content="Создать аккаунт"
+                    Classes="quiet"
+                    Command="{Binding RegisterCommand}"
+                    IsVisible="{Binding AllowRegistration}"
+                    HorizontalAlignment="Center"
+                />
+                <TextBlock
+                    Text="Проблема со входом? Обратитесь к администратору сервера"
+                    Classes="muted"
+                />
+                <ItemsControl
+                    ItemsSource="{Binding SavedAccounts}"
+                    IsVisible="{Binding HasSavedAccounts}"
+                >
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="18" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SettingsAction">
+                            <Button
+                                Content="{Binding Label}"
+                                Command="{Binding Command}"
+                                Classes="quiet"
+                            />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock
+                    Text="{Binding Notice}"
+                    IsVisible="{Binding ShowNotice}"
+                    Classes="muted"
+                    Foreground="{DynamicResource secondary}"
+                />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

@@ -14,6 +14,7 @@ using Q.Sock.Core.Plugins;
 using Q.Sock.Shared.Models;
 using Q.Sock.Shared.Models.Auth;
 using Q.Sock.UI.Calls;
+using Q.Sock.UI.Views;
 using Q.Sock.UI.Plugins;
 using static Q.Sock.UI.UiFactory;
 
@@ -36,10 +37,11 @@ public sealed partial class MessengerView : UserControl
     private readonly IDisplaySettings? displaySettings;
     private readonly List<SavedAccount> accounts = [];
     private readonly Grid root = new();
-    private readonly Grid workspace = new();
-    private readonly StackPanel navigation = new() { Spacing = 4, Margin = new Thickness(12, 8) };
-    private readonly Grid conversation = new();
-    private readonly TextBlock status = Text("Q.Sock", 12);
+    private readonly WorkspaceView workspaceView = new();
+    private Grid workspace => workspaceView.Workspace;
+    private StackPanel navigation => workspaceView.Navigation;
+    private Grid conversation => workspaceView.Conversation;
+    private TextBlock status => workspaceView.Status;
     private readonly ScrollViewer messageScroll = new();
     private readonly StackPanel messageList = new()
     {

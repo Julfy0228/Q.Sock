@@ -13,7 +13,7 @@ public sealed partial class MessengerView
 {
     private void RebuildNavigation()
     {
-        if (showingLogin || sidebar is null)
+        if (showingLogin)
             return;
         sidebarTitle.Text = selectedGuild is { } guildId
             ? guilds.FirstOrDefault(guild => guild.Id == guildId)?.Name ?? "Пространство"

@@ -1,0 +1,115 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Q.Sock.UI.MessengerStyles">
+    <Style Selector="Button">
+        <Setter Property="Background" Value="{DynamicResource surface}" />
+        <Setter Property="Foreground" Value="{DynamicResource text}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="MinHeight" Value="40" />
+    </Style>
+    <Style Selector="TextBox">
+        <Setter Property="Background" Value="{DynamicResource background}" />
+        <Setter Property="Foreground" Value="{DynamicResource text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource separator}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="MinHeight" Value="56" />
+    </Style>
+    <Style Selector="ComboBox">
+        <Setter Property="Background" Value="{DynamicResource background}" />
+        <Setter Property="Foreground" Value="{DynamicResource text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource separator}" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="MinWidth" Value="0" />
+    </Style>
+    <Style Selector="CalendarDatePicker">
+        <Setter Property="Background" Value="{DynamicResource background}" />
+        <Setter Property="Foreground" Value="{DynamicResource text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource separator}" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="MinWidth" Value="0" />
+    </Style>
+    <Style Selector="TimePicker">
+        <Setter Property="Background" Value="{DynamicResource background}" />
+        <Setter Property="Foreground" Value="{DynamicResource text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource separator}" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="MinWidth" Value="0" />
+    </Style>
+    <Style Selector="Button.quiet">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.quiet:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource selection}" />
+    </Style>
+    <Style Selector="Button.nav">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource selection}" />
+    </Style>
+    <Style Selector="Button.tab">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.tab:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource selection}" />
+    </Style>
+    <Style Selector="Button.icon">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.icon:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource selection}" />
+    </Style>
+    <Style Selector="Button.icon">
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.nav">
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="MinHeight" Value="64" />
+    </Style>
+    <Style Selector="Button.selected">
+        <Setter Property="Background" Value="{DynamicResource selection}" />
+    </Style>
+    <Style Selector="Button.primary">
+        <Setter Property="Background" Value="{DynamicResource accent}" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource accentHover}" />
+    </Style>
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{DynamicResource danger}" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="TextBox.composer">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="2,9" />
+        <Setter Property="MinHeight" Value="40" />
+    </Style>
+    <Style Selector="TextBox.search">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="4,10" />
+        <Setter Property="MinHeight" Value="44" />
+        <Setter Property="FontSize" Value="13" />
+    </Style>
+</Styles>

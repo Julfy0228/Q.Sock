@@ -1,10 +1,7 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Markup.Xaml.MarkupExtensions;
-using Avalonia.Styling;
 using Q.Sock.Core;
-using static Q.Sock.UI.UiFactory;
+using Q.Sock.UI.ViewModels;
+using Q.Sock.UI.Views;
 
 namespace Q.Sock.UI;
 
@@ -54,60 +51,21 @@ public sealed partial class MessengerView
 
     private void ConfigureThemeStyles() => Styles.Add(new MessengerStyles());
 
-    private async Task ShowThemeEditor()
+    private Task ShowThemeEditor()
     {
-        var name = Input("Название темы", currentTheme.Name);
-        var fields = new Dictionary<string, TextBox>();
-        var labels = new Dictionary<string, string>
-        {
-            ["background"] = "Фон",
-            ["panel"] = "Панели",
-            ["surface"] = "Поля и кнопки",
-            ["text"] = "Основной текст",
-            ["muted"] = "Второстепенный текст",
-            ["accent"] = "Акцент",
-        };
-        var form = Column(name);
-        foreach (var (key, label) in labels)
-        {
-            var input = Input("#RRGGBB", currentTheme.Colors[key]);
-            fields[key] = input;
-            form.Children.Add(Column(Text(label), input));
-        }
-        form.Children.Add(
-            Button(
-                "Применить",
-                () =>
-                    Run(async () =>
-                    {
-                        var proposed = new MessengerTheme
-                        {
-                            Name = name.Text?.Trim() ?? "",
-                            Colors = fields.ToDictionary(
-                                item => item.Key,
-                                item => item.Value.Text?.Trim() ?? ""
-                            ),
-                        };
-                        currentTheme = MessengerTheme.Parse(proposed.Export());
-                        ApplyTheme();
-                        await preferences.Write("theme", currentTheme.Export());
-                        CloseDialog();
-                    })
-            )
+        var model = new AppearanceViewModel(
+            currentTheme,
+            proposed => Run(() => SaveEditedTheme(proposed)),
+            () => Run(() => SaveEditedTheme(new MessengerTheme()))
         );
-        form.Children.Add(
-            Button(
-                "Сбросить тему",
-                () =>
-                    Run(async () =>
-                    {
-                        currentTheme = new();
-                        ApplyTheme();
-                        await preferences.Write("theme", currentTheme.Export());
-                        CloseDialog();
-                    })
-            )
-        );
-        await ShowDialog("Оформление", form);
+        return ShowDialog("Оформление", new AppearanceView { DataContext = model });
+    }
+
+    private async Task SaveEditedTheme(MessengerTheme proposed)
+    {
+        currentTheme = MessengerTheme.Parse(proposed.Export());
+        ApplyTheme();
+        await preferences.Write("theme", currentTheme.Export());
+        CloseDialog();
     }
 }

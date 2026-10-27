@@ -1,0 +1,99 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="Q.Sock.UI.Views.WorkspaceView"
+    Design.Width="1280"
+    Design.Height="820"
+    Background="{DynamicResource background}"
+>
+    <Grid x:Name="ShellGrid" RowDefinitions="72,*,Auto">
+        <Border x:Name="DesktopHeader" Background="{DynamicResource panel}">
+            <Grid ColumnDefinitions="*,Auto" Margin="16,10">
+                <StackPanel Spacing="2">
+                    <TextBlock
+                        Text="Мессенджер"
+                        FontSize="18"
+                        LineHeight="25.2"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource text}"
+                    />
+                    <TextBlock
+                        x:Name="IdentityText"
+                        FontSize="11"
+                        LineHeight="15.4"
+                        Foreground="{DynamicResource muted}"
+                        TextWrapping="Wrap"
+                    />
+                </StackPanel>
+                <ContentControl x:Name="DesktopActionsHost" Grid.Column="1" />
+            </Grid>
+        </Border>
+        <Grid x:Name="WorkspaceGrid" Grid.Row="1" ColumnDefinitions="64,280,*">
+            <Border x:Name="RailPanel" Background="{DynamicResource chrome}">
+                <ScrollViewer>
+                    <StackPanel x:Name="RailItemsPanel" Spacing="16" Margin="12,14" />
+                </ScrollViewer>
+            </Border>
+            <Border x:Name="SidebarPanel" Grid.Column="1" Background="{DynamicResource panel}">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <Grid ColumnDefinitions="*,Auto" Margin="16">
+                        <StackPanel Spacing="12">
+                            <TextBlock
+                                x:Name="SidebarTitleText"
+                                Text="Чаты"
+                                FontSize="18"
+                                LineHeight="25.2"
+                                FontWeight="SemiBold"
+                                TextWrapping="Wrap"
+                                Foreground="{DynamicResource text}"
+                            />
+                            <TextBlock
+                                x:Name="StatusText"
+                                Text="Q.Sock"
+                                FontSize="11"
+                                LineHeight="16.8"
+                                TextWrapping="Wrap"
+                                Foreground="{DynamicResource muted}"
+                            />
+                        </StackPanel>
+                        <ContentControl x:Name="SidebarActionsHost" Grid.Column="1" />
+                    </Grid>
+                    <Border
+                        x:Name="SearchSurface"
+                        Grid.Row="1"
+                        Margin="12,0,12,4"
+                        Padding="8,0"
+                        CornerRadius="8"
+                        Background="{DynamicResource surface}"
+                    >
+                        <Grid ColumnDefinitions="32,*">
+                            <ContentControl
+                                x:Name="SearchIconHost"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                            />
+                            <TextBox
+                                x:Name="SearchInput"
+                                Grid.Column="1"
+                                Classes="search"
+                                PlaceholderText="Поиск людей и сообщений"
+                            />
+                        </Grid>
+                    </Border>
+                    <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel x:Name="NavigationPanel" Spacing="4" Margin="12,8" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+            <Grid x:Name="ConversationPanel" Grid.Column="2" />
+            <Border x:Name="MembersPanel" Grid.Column="3" Background="{DynamicResource panel}">
+                <ScrollViewer>
+                    <StackPanel x:Name="MemberListPanel" Spacing="20" Margin="20" />
+                </ScrollViewer>
+            </Border>
+        </Grid>
+        <Border x:Name="BottomBar" Grid.Row="2" Padding="4,4" Background="{DynamicResource chrome}">
+            <Grid x:Name="BottomNavigationGrid" ColumnDefinitions="*,*,*,*" />
+        </Border>
+    </Grid>
+</UserControl>

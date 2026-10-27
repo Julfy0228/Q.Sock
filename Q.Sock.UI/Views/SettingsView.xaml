@@ -1,0 +1,93 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:Q.Sock.UI.ViewModels"
+    x:Class="Q.Sock.UI.Views.SettingsView"
+    x:DataType="vm:SettingsViewModel"
+    x:CompileBindings="True"
+    Design.Width="560"
+    Design.Height="1100"
+    Background="{DynamicResource background}"
+>
+    <UserControl.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource text}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="LineHeight" Value="19.6" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="{DynamicResource muted}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="LineHeight" Value="16.8" />
+        </Style>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="LineHeight" Value="28" />
+        </Style>
+    </UserControl.Styles>
+    <StackPanel Spacing="12">
+        <TextBlock Text="{Binding AccountHeading}" Classes="section" />
+        <TextBlock
+            IsVisible="{Binding SessionOnly}"
+            Text="Системное хранилище недоступно. Аккаунты и изменения списка сохраняются только до закрытия приложения."
+        />
+        <Button Content="Модули интерфейса" Command="{Binding PluginsCommand}" />
+        <ItemsControl ItemsSource="{Binding Accounts}" IsVisible="{Binding HasAccounts}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="12" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:AccountSettingsItem">
+                    <StackPanel Spacing="12">
+                        <Button Content="{Binding Label}" Command="{Binding SwitchCommand}" />
+                        <Button Content="Убрать из сохранённых" Command="{Binding RemoveCommand}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button Content="{Binding AddAccountLabel}" Command="{Binding AddAccountCommand}" />
+        <TextBlock Text="Оформление" Classes="section" />
+        <CheckBox
+            Content="Разрешить поворот экрана"
+            IsVisible="{Binding ShowRotation}"
+            IsChecked="{Binding AllowRotation, Mode=TwoWay}"
+        />
+        <Button Content="Импорт темы" Command="{Binding ImportThemeCommand}" />
+        <Button Content="Импорт QR-кода из изображения" Command="{Binding ImportQrCommand}" />
+        <Button
+            Content="Сканировать QR-код камерой"
+            Command="{Binding ScanQrCommand}"
+            IsVisible="{Binding CanScanQr}"
+        />
+        <Button Content="Экспорт темы" Command="{Binding ExportThemeCommand}" />
+        <Button Content="QR-код темы" Command="{Binding ExportQrCommand}" />
+        <Button Content="Настроить цвета" Command="{Binding EditThemeCommand}" />
+        <TextBlock Text="Активные устройства" Classes="section" />
+        <ItemsControl ItemsSource="{Binding Sessions}" IsVisible="{Binding HasSessions}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="12" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:SessionSettingsItem">
+                    <Border Padding="16" CornerRadius="12" Background="{DynamicResource panel}">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="{Binding DeviceName}" />
+                            <TextBlock Text="{Binding Activity}" FontSize="11" LineHeight="15.4" />
+                            <Button Content="Завершить сессию" Command="{Binding RevokeCommand}" />
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Button
+            Content="Управление сервером и резервные копии"
+            Command="{Binding AdminCommand}"
+            IsVisible="{Binding IsAdmin}"
+        />
+    </StackPanel>
+</UserControl>
