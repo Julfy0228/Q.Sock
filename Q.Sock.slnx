@@ -5,4 +5,11 @@
   <Project Path="Q.Sock.Server/Q.Sock.Server.csproj" Id="581f5b6e-ec1c-47c9-8bbf-77226f575507" />
   <Project Path="Q.Sock.Shared/Q.Sock.Shared.csproj" Id="055a0918-ab6f-41da-9ffb-7fb33a94f5f6" />
   <Project Path="Q.Sock.Client/Q.Sock.Client.csproj" />
+  <Project Path="Q.Sock.Core/Q.Sock.Core.csproj" />
+  <Project Path="Q.Sock.UI/Q.Sock.UI.csproj" />
+  <Project Path="Q.Sock.Browser/Q.Sock.Browser.csproj" />
+  <Project Path="Q.Sock.Plugins.Moodle/Q.Sock.Plugins.Moodle.csproj" />
+  <Project Path="Q.Sock.PluginContracts/Q.Sock.PluginContracts.csproj" />
+  <Project Path="tools/Q.Sock.ModulePack/Q.Sock.ModulePack.csproj" />
+  <Project Path="Q.Sock.Server.Plugins.Moodle/Q.Sock.Server.Plugins.Moodle.csproj" />
 </Solution>

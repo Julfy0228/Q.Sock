@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLDB PATH="local/qsock/db" VERSION="20261025" COMMENT="Q.Sock integration">
+  <TABLES>
+    <TABLE NAME="local_qsock_events" COMMENT="Calendar mappings">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="callid" TYPE="char" LENGTH="36" NOTNULL="true"/>
+        <FIELD NAME="eventid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
+      <INDEXES><INDEX NAME="callid" UNIQUE="true" FIELDS="callid"/></INDEXES>
+    </TABLE>
+    <TABLE NAME="local_qsock_nonces" COMMENT="Signed request replay prevention">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="signature" TYPE="char" LENGTH="64" NOTNULL="true"/>
+        <FIELD NAME="expires" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
+      <INDEXES><INDEX NAME="signature" UNIQUE="true" FIELDS="signature"/></INDEXES>
+    </TABLE>
+    <TABLE NAME="local_qsock_users" COMMENT="Stable account identifiers for deletion synchronization">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="subject" TYPE="char" LENGTH="100" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
+      <INDEXES><INDEX NAME="userid" UNIQUE="true" FIELDS="userid"/></INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

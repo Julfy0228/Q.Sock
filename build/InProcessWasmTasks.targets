@@ -1,0 +1,27 @@
+<Project>
+  <UsingTask TaskName="ComputeManagedAssemblies" AssemblyFile="$(ILLinkTasksAssembly)" Override="true" Condition="'$(ILLinkTasksAssembly)' != ''" />
+  <UsingTask TaskName="ILLink" AssemblyFile="$(ILLinkTasksAssembly)" Override="true" Condition="'$(ILLinkTasksAssembly)' != ''" />
+  <UsingTask
+    TaskName="Microsoft.NET.Sdk.WebAssembly.GenerateWasmBootJson"
+    AssemblyFile="$(_WebAssemblySdkTasksAssembly)"
+    Override="true" />
+  <UsingTask
+    TaskName="Microsoft.NET.Sdk.WebAssembly.ComputeWasmBuildAssets"
+    AssemblyFile="$(_WebAssemblySdkTasksAssembly)"
+    Override="true" />
+  <UsingTask
+    TaskName="Microsoft.NET.Sdk.WebAssembly.ComputeWasmPublishAssets"
+    AssemblyFile="$(_WebAssemblySdkTasksAssembly)"
+    Override="true" />
+  <UsingTask
+    TaskName="Microsoft.NET.Sdk.WebAssembly.ConvertDllsToWebCil"
+    AssemblyFile="$(_WebAssemblySdkTasksAssembly)"
+    Override="true" />
+  <UsingTask TaskName="MonoTargetsTasks.MarshalingPInvokeScanner" AssemblyFile="$(MonoTargetsTasksAssemblyPath)" Override="true" />
+  <UsingTask TaskName="EmitBundleObjectFiles" AssemblyFile="$(MonoTargetsTasksAssemblyPath)" Override="true" />
+  <UsingTask TaskName="Microsoft.WebAssembly.Build.Tasks.WasmLoadAssembliesAndReferences" AssemblyFile="$(WasmAppBuilderTasksAssemblyPath)" Override="true" />
+  <UsingTask TaskName="Microsoft.WebAssembly.Build.Tasks.ManagedToNativeGenerator" AssemblyFile="$(WasmAppBuilderTasksAssemblyPath)" Override="true" />
+  <UsingTask TaskName="Microsoft.WebAssembly.Build.Tasks.EmccCompile" AssemblyFile="$(WasmAppBuilderTasksAssemblyPath)" Override="true" />
+  <UsingTask TaskName="Microsoft.WebAssembly.Build.Tasks.WasmCalculateInitialHeapSize" AssemblyFile="$(WasmAppBuilderTasksAssemblyPath)" Override="true" />
+  <UsingTask TaskName="Microsoft.WebAssembly.Build.Tasks.WasmAppBuilder" AssemblyFile="$(WasmAppBuilderTasksAssemblyPath)" Override="true" />
+</Project>

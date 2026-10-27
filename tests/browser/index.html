@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Q.Sock — проверка браузерных компонентов</title>
+<style>
+body{font:16px system-ui;background:#171a22;color:#eef0f8;margin:40px;max-width:900px}button{font:inherit;padding:12px 20px;cursor:pointer}li{margin:12px 0}.pass{color:#94e4ac}.fail{color:#ff9caa}canvas{display:none}
+</style>
+<h1>Проверка компонентов Q.Sock</h1>
+<p>Два WebRTC-участника с синтетическими аудио- и видеодорожками. Камера, микрофон, экран и динамики компьютера не используются.</p>
+<button id="start">Запустить проверки</button>
+<ol id="results"></ol>
+<p id="summary" role="status">Ожидание запуска</p>
+<script type="module" src="/checks.js"></script>
+</html>

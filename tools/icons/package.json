@@ -1,0 +1,11 @@
+{
+  "name": "qsock-icon-import",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "import": "node import-material.mjs"
+  },
+  "devDependencies": {
+    "@babel/parser": "7.29.11"
+  }
+}

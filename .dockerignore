@@ -1,0 +1,15 @@
+**/bin
+**/obj
+**/node_modules
+.git
+.vs
+artifacts
+**/*.db
+**/*.db-shm
+**/*.db-wal
+Q.Sock.Server/state
+Q.Sock.Server/storage
+Q.Sock.Server/appsettings.Local.json
+Q.Sock.Server/wwwroot/avalonia
+Q.Sock.Server/wwwroot/app
+deployment/.env

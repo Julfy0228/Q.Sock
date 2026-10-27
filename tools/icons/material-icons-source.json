@@ -1,0 +1,16 @@
+{
+  "package": "@mui/icons-material",
+  "version": "9.5.0",
+  "tarball": "https://registry.npmjs.org/@mui/icons-material/-/icons-material-9.5.0.tgz",
+  "integrity": "sha512-dahtVaqnRUIBgaZ4WC9EdP+LgJ5d2rslASYIX+nDFG6+ssUiM11jQ+Gd1wH8vhUGoNA9ES40MYics5BI8zJFXQ==",
+  "count": 10750,
+  "variants": {
+    "Filled": 2164,
+    "Outlined": 2140,
+    "Rounded": 2144,
+    "Sharp": 2144,
+    "TwoTone": 2158
+  },
+  "catalogSha256": "365fe8b34550794f7c86ce0a57b2a8215df47810d8aff07a1f255a2b8631ea3f",
+  "compressedBytes": 599476
+}

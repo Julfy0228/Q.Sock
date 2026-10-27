@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0-android</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+        <ApplicationId>org.qsock.messenger</ApplicationId>
+        <ApplicationTitle>Q.Sock</ApplicationTitle>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+        <AndroidPackageFormats>apk</AndroidPackageFormats>
+        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+        <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Avalonia.Android" Version="12.1.3" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.3" />
+        <ProjectReference Include="../Q.Sock.UI/Q.Sock.UI.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <TrimmerRootAssembly Include="Q.Sock.Core" />
+        <TrimmerRootAssembly Include="Q.Sock.Shared" />
+        <TrimmerRootAssembly Include="Q.Sock.UI" />
+        <TrimmerRootAssembly Include="Q.Sock.PluginContracts" />
+        <TrimmerRootAssembly Include="Avalonia.Controls" />
+        <TrimmerRootAssembly Include="Avalonia.Base" />
+        <TrimmerRootAssembly Include="Q.Sock.Android" />
+    </ItemGroup>
+</Project>

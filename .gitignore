@@ -295,6 +295,14 @@ FakesAssemblies/
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
 node_modules/
+Q.Sock.Server/state/
+Q.Sock.Server/storage/
+Q.Sock.Server/client-modules/
+Q.Sock.Server/appsettings.Local.json
+deployment/.env
+Q.Sock.Server/wwwroot/app/
+Q.Sock.Server/wwwroot/avalonia/
+*.qsock-theme.json
 
 # Visual Studio 6 build log
 *.plg
@@ -372,3 +380,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Временно не буду публиковать docs, я над ними ещё поработаю
+docs/*
