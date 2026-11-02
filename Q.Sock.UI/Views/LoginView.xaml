@@ -155,6 +155,12 @@
                     Text="Проблема со входом? Обратитесь к администратору сервера"
                     Classes="muted"
                 />
+                <Button
+                    Content="Справка Q.Sock"
+                    Command="{Binding HelpCommand}"
+                    Classes="quiet"
+                    HorizontalAlignment="Center"
+                />
                 <ItemsControl
                     ItemsSource="{Binding SavedAccounts}"
                     IsVisible="{Binding HasSavedAccounts}"

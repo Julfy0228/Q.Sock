@@ -24,6 +24,7 @@ Application.Current!.Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
 Application.Current.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
 
 XamlViewChecks.Run();
+DocumentationUiChecks.Run();
 
 Check(MaterialIcon.Names.Count == 10750, "Каталог MUI обрезан.");
 foreach (var name in MaterialIcon.Names)

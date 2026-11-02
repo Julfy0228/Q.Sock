@@ -55,6 +55,8 @@ public sealed partial class MessengerView
         {
             UpdateCallLayout();
             loginView?.SetViewport(Bounds.Size);
+            if (documentation is not null)
+                documentation.Height = Math.Max(200, Bounds.Height - 210);
             if (dialog?.Child is Border card)
                 card.MaxHeight = Math.Max(0, Bounds.Height - 32);
             var narrow = Bounds.Width < 760;
@@ -103,6 +105,7 @@ public sealed partial class MessengerView
             AddAction("Настройки пространства", ShowSpace);
         AddAction("Настройки и аккаунты", ShowSettings);
         AddAction("Модули интерфейса", ShowClientPlugins);
+        AddAction("Справка Q.Sock", ShowDocumentation);
         foreach (
             var plugin in externalPlugins.Values.Where(plugin =>
                 plugin.Package.Slot is "action" or "workspace"

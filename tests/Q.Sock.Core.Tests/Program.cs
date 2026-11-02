@@ -3,6 +3,8 @@ using Q.Sock.Core;
 using Q.Sock.Core.Plugins;
 using Q.Sock.UI;
 
+await DocumentationChecks.Run();
+
 Check(
     AvatarColors.Palette.Count == 32 && AvatarColors.Palette.Distinct().Count() == 32,
     "Палитра должна содержать 32 разных цвета."

@@ -13,13 +13,15 @@ public sealed class LoginViewModel : ViewModel
     public LoginViewModel(
         Func<LoginViewModel, Task>? login = null,
         Func<LoginViewModel, Task>? register = null,
-        Func<LoginViewModel, Task>? refreshServer = null
+        Func<LoginViewModel, Task>? refreshServer = null,
+        Func<Task>? help = null
     )
     {
         SavedAccounts.CollectionChanged += (_, _) => Notify(nameof(HasSavedAccounts));
         LoginCommand = new(() => login?.Invoke(this) ?? Task.CompletedTask);
         RegisterCommand = new(() => register?.Invoke(this) ?? Task.CompletedTask);
         RefreshServerCommand = new(() => refreshServer?.Invoke(this) ?? Task.CompletedTask);
+        HelpCommand = new(() => help?.Invoke() ?? Task.CompletedTask);
     }
 
     public string ServerUrl
@@ -55,6 +57,7 @@ public sealed class LoginViewModel : ViewModel
     public AsyncCommand LoginCommand { get; }
     public AsyncCommand RegisterCommand { get; }
     public AsyncCommand RefreshServerCommand { get; }
+    public AsyncCommand HelpCommand { get; }
 }
 
 public sealed record SettingsAction(string Label, AsyncCommand Command);

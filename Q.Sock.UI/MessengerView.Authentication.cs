@@ -21,7 +21,8 @@ public sealed partial class MessengerView
                 Run(() => Authenticate(input.ServerUrl, input.UserName, input.Password, false)),
             register: input =>
                 Run(() => Authenticate(input.ServerUrl, input.UserName, input.Password, true)),
-            refreshServer: RefreshLoginServer
+            refreshServer: RefreshLoginServer,
+            help: ShowDocumentation
         )
         {
             ServerUrl = browserOrigin ?? account?.ServerUrl ?? "http://127.0.0.1:5210",
