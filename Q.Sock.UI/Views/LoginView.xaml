@@ -54,7 +54,7 @@
                     />
                 </Border>
                 <TextBlock
-                    Text="Мессенджер"
+                    Text="Q.Sock"
                     FontSize="28"
                     LineHeight="39.2"
                     FontWeight="SemiBold"
@@ -66,13 +66,11 @@
                 <Border Height="12" />
                 <TextBlock Text="Вход" FontSize="16" LineHeight="22.4" FontWeight="SemiBold" />
                 <TextBlock Text="{Binding Hint}" Classes="muted" />
-                <Separator />
-                <TextBlock Text="Учётная запись сервера" FontWeight="SemiBold" />
                 <Grid IsVisible="{Binding ShowServer}">
                     <TextBox
                         x:Name="ServerUrlInput"
                         Margin="0,8,0,0"
-                        PlaceholderText="Адрес сервера"
+                        PlaceholderText="https://server.example"
                         Text="{Binding ServerUrl, Mode=TwoWay}"
                         LostFocus="ServerLostFocus"
                     />
@@ -95,7 +93,7 @@
                     <TextBox
                         x:Name="UserNameInput"
                         Margin="0,8,0,0"
-                        PlaceholderText="Логин"
+                        PlaceholderText="User"
                         Text="{Binding UserName, Mode=TwoWay}"
                     />
                     <Border
@@ -117,9 +115,9 @@
                     <TextBox
                         x:Name="PasswordInput"
                         Margin="0,8,0,0"
-                        PlaceholderText="Пароль"
+                        PlaceholderText="********"
                         Text="{Binding Password, Mode=TwoWay}"
-                        PasswordChar="●"
+                        PasswordChar="*"
                         KeyDown="PasswordKeyDown"
                     />
                     <Border

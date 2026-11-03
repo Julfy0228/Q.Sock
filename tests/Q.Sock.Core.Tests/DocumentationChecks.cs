@@ -41,7 +41,8 @@ internal static class DocumentationChecks
             "Markdown повреждён при загрузке."
         );
         transport.Offline = true;
-        var offline = await client.Read(current);
+        var reopened = new DocumentationClient(http, preferences);
+        var offline = await reopened.Read(current);
         Check(
             offline.FromCache && first.Bytes.SequenceEqual(offline.Bytes),
             "Кэш не работает без сети."

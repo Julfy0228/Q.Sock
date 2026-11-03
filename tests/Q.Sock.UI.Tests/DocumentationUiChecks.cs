@@ -49,10 +49,29 @@ internal static class DocumentationUiChecks
                 "Флажки списка не отрисованы."
             );
             Check(
+                view.GetVisualDescendants()
+                    .OfType<CheckBox>()
+                    .All(box => box.Parent is Grid && Grid.GetColumn(box) == 0),
+                "Флажки должны находиться в колонке маркеров списка."
+            );
+            Check(
                 view.GetVisualDescendants().OfType<Image>().Any(image => image.Source is not null),
                 "Изображение не загружено."
             );
             var selector = view.GetVisualDescendants().OfType<ComboBox>().Single();
+            var link = view.GetVisualDescendants()
+                .OfType<Button>()
+                .First(button => button.Classes.Contains("documentation-link"));
+            Check(link.FontSize == 14, "Ссылка должна использовать размер основного текста.");
+            Check(
+                ((ISolidColorBrush)link.Foreground!).Color
+                    == ((ISolidColorBrush)host.Resources["link"]!).Color,
+                "Ссылка должна применять цвет из палитры."
+            );
+            Check(
+                selector.Bounds.Height == 40,
+                "Высота выбора статьи должна совпадать с кнопками."
+            );
             Check(selector.Items.Count == 2, "Статья расширения видна без подключённого модуля.");
             view.Navigate("guide/chats.md").GetAwaiter().GetResult();
             Dispatcher.UIThread.RunJobs();

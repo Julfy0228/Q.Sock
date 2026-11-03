@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
@@ -33,7 +34,7 @@ public sealed class DocumentationMarkdown : StackPanel, IDisposable
         this.client = client;
         this.address = address;
         this.navigate = navigate;
-        Spacing = 12;
+        Spacing = 0;
         foreach (var block in Markdown.Parse(markdown, MessageFormatting.Pipeline))
             AddBlock(this, block);
     }
@@ -49,18 +50,52 @@ public sealed class DocumentationMarkdown : StackPanel, IDisposable
     {
         if (block is ListBlock list)
         {
+            var listPanel = new StackPanel();
             var number = int.TryParse(list.OrderedStart, out var start) ? start : 1;
             foreach (var item in list.OfType<ListItemBlock>())
             {
                 var row = new Grid { ColumnDefinitions = new("Auto,*") };
-                row.Children.Add(UiFactory.Text(list.IsOrdered ? $"{number++}. " : "• "));
-                var content = new StackPanel { Spacing = 4 };
+                var task = item.OfType<ParagraphBlock>()
+                    .FirstOrDefault()
+                    ?.Inline?.OfType<TaskList>()
+                    .FirstOrDefault();
+                if (task is not null)
+                    row.Children.Add(
+                        new CheckBox
+                        {
+                            IsChecked = task.Checked,
+                            IsHitTestVisible = false,
+                            Focusable = false,
+                            MinHeight = 32,
+                            Height = 32,
+                            Padding = new Thickness(0),
+                            Margin = new Thickness(0, 0, 5, 0),
+                            VerticalContentAlignment = VerticalAlignment.Center,
+                            VerticalAlignment = VerticalAlignment.Top,
+                        }
+                    );
+                else
+                    row.Children.Add(
+                        new TextBlock
+                        {
+                            Text = list.IsOrdered ? $"{number++}. " : "• ",
+                            FontSize = 14,
+                            LineHeight = 24,
+                        }
+                    );
+                var content = new StackPanel
+                {
+                    VerticalAlignment = task is null
+                        ? VerticalAlignment.Top
+                        : VerticalAlignment.Center,
+                };
                 Grid.SetColumn(content, 1);
                 foreach (var child in item)
                     AddBlock(content, child);
                 row.Children.Add(content);
-                target.Children.Add(row);
+                listPanel.Children.Add(row);
             }
+            target.Children.Add(listPanel);
             return;
         }
         if (block is FencedCodeBlock code)
@@ -77,6 +112,17 @@ public sealed class DocumentationMarkdown : StackPanel, IDisposable
         }
         if (block is LeafBlock leaf)
         {
+            if (
+                leaf.Inline?.FirstChild is LinkInline picture
+                && picture.NextSibling is null
+                && (picture.IsImage || picture.FirstChild is LinkInline { IsImage: true })
+            )
+            {
+                var illustration = picture.IsImage ? CreateImage(picture) : CreateLink(picture);
+                illustration.HorizontalAlignment = HorizontalAlignment.Left;
+                target.Children.Add(illustration);
+                return;
+            }
             var text = new SelectableTextBlock
             {
                 TextWrapping = TextWrapping.Wrap,
@@ -84,6 +130,11 @@ public sealed class DocumentationMarkdown : StackPanel, IDisposable
                     ? Math.Max(17, 30 - heading.Level * 3)
                     : 14,
                 FontWeight = block is HeadingBlock ? FontWeight.SemiBold : FontWeight.Normal,
+                LineHeight = block is HeadingBlock ? double.NaN : 24,
+                Margin =
+                    block is HeadingBlock
+                        ? new Thickness(0, target.Children.Count == 0 ? 0 : 12, 0, 6)
+                        : new Thickness(0),
             };
             text.Bind(SelectableTextBlock.ForegroundProperty, new DynamicResourceExtension("text"));
             if (leaf.Inline is { } inline)
@@ -116,19 +167,7 @@ public sealed class DocumentationMarkdown : StackPanel, IDisposable
                 case LineBreakInline:
                     target.Add(new LineBreak());
                     break;
-                case TaskList task:
-                    target.Add(
-                        new InlineUIContainer(
-                            new CheckBox
-                            {
-                                IsChecked = task.Checked,
-                                IsHitTestVisible = false,
-                                Focusable = false,
-                                MinHeight = 20,
-                                VerticalAlignment = VerticalAlignment.Center,
-                            }
-                        )
-                    );
+                case TaskList:
                     break;
                 case EmphasisInline emphasis:
                     var span = new Span();
@@ -143,35 +182,57 @@ public sealed class DocumentationMarkdown : StackPanel, IDisposable
                     target.Add(new InlineUIContainer(CreateImage(link)));
                     break;
                 case LinkInline link:
-                    Control content;
-                    if (link.FirstChild is LinkInline { IsImage: true } image)
-                        content = CreateImage(image);
-                    else
-                    {
-                        var label = new TextBlock { TextWrapping = TextWrapping.Wrap };
-                        AddInlines(label.Inlines!, link);
-                        content = label;
-                    }
-                    var button = new Button
-                    {
-                        Content = content,
-                        Padding = new Thickness(0),
-                        Margin = new Thickness(0),
-                        BorderThickness = new Thickness(0),
-                        MinHeight = 0,
-                        MinWidth = 0,
-                        HorizontalContentAlignment = HorizontalAlignment.Left,
-                    };
-                    button.Bind(Button.ForegroundProperty, new DynamicResourceExtension("accent"));
-                    button.Classes.Add("quiet");
-                    button.Click += async (_, _) => await navigate(link.Url ?? "");
-                    target.Add(new InlineUIContainer(button));
+                    target.Add(
+                        new InlineUIContainer(CreateLink(link))
+                        {
+                            BaselineAlignment = BaselineAlignment.Baseline,
+                        }
+                    );
                     break;
                 case ContainerInline nested:
                     AddInlines(target, nested);
                     break;
             }
         }
+    }
+
+    private Button CreateLink(LinkInline link)
+    {
+        Control content;
+        if (link.FirstChild is LinkInline { IsImage: true } image)
+            content = CreateImage(image);
+        else
+        {
+            var label = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                FontSize = 14,
+                LineHeight = 24,
+            };
+            AddInlines(label.Inlines!, link);
+            content = label;
+        }
+        var button = new DocumentationLink(content)
+        {
+            Content = content,
+            FontSize = 14,
+            Padding = new Thickness(0),
+            Margin = new Thickness(0),
+            BorderThickness = new Thickness(0),
+            MinHeight = 0,
+            MinWidth = 0,
+            Background = Brushes.Transparent,
+            Cursor = new Cursor(StandardCursorType.Hand),
+            HorizontalContentAlignment = HorizontalAlignment.Left,
+        };
+        button.Classes.Add("documentation-link");
+        if (content is TextBlock text)
+            text.Bind(
+                TextBlock.ForegroundProperty,
+                button.GetObservable(Button.ForegroundProperty)
+            );
+        button.Click += async (_, _) => await navigate(link.Url ?? "");
+        return button;
     }
 
     private Control CreateImage(LinkInline link)
@@ -234,5 +295,18 @@ public sealed class DocumentationMarkdown : StackPanel, IDisposable
         foreach (var image in images)
             image.Dispose();
         images.Clear();
+    }
+
+    private sealed class DocumentationLink(Control content) : Button
+    {
+        protected override Type StyleKeyOverride => typeof(Button);
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            var size = base.MeasureOverride(availableSize);
+            if (content is TextBlock label && label.TextLayout.TextLines.Count > 0)
+                TextBlock.SetBaselineOffset(this, label.TextLayout.TextLines[0].Baseline);
+            return size;
+        }
     }
 }

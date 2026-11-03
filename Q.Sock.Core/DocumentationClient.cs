@@ -18,6 +18,7 @@ public sealed class DocumentationClient(
     Uri? origin = null
 )
 {
+    private readonly string revision = Guid.NewGuid().ToString("N");
     public static readonly Uri PublishedOrigin = new("https://julfy0228.github.io/Q.Sock.Docs/");
     public Uri Origin { get; } = origin ?? PublishedOrigin;
 
@@ -55,8 +56,12 @@ public sealed class DocumentationClient(
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(TimeSpan.FromSeconds(12));
+            var fresh = new UriBuilder(resource);
+            fresh.Query = string.IsNullOrEmpty(fresh.Query)
+                ? "qsockDocs=" + revision
+                : fresh.Query.TrimStart('?') + "&qsockDocs=" + revision;
             using var response = await http.GetAsync(
-                resource,
+                fresh.Uri,
                 HttpCompletionOption.ResponseHeadersRead,
                 timeout.Token
             );

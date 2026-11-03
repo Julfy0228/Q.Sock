@@ -16,6 +16,10 @@ public sealed class DocumentationView : UserControl, IDisposable
     {
         HorizontalAlignment = HorizontalAlignment.Stretch,
         MinWidth = 0,
+        MinHeight = 40,
+        Height = 40,
+        Padding = new Thickness(12, 0),
+        VerticalContentAlignment = VerticalAlignment.Center,
     };
     private readonly TextBlock status = UiFactory.Text("Загрузка руководства…", 12, "secondary");
     private readonly ScrollViewer scroll = new()
@@ -39,24 +43,23 @@ public sealed class DocumentationView : UserControl, IDisposable
         this.client = client ?? new DocumentationClient(Http, preferences);
         this.modules = new(modules ?? [], StringComparer.OrdinalIgnoreCase);
         var grid = new Grid { RowDefinitions = new("Auto,Auto,*"), RowSpacing = 10 };
-        var tools = new Grid { ColumnDefinitions = new("Auto,*,Auto"), ColumnSpacing = 6 };
+        var tools = new Grid { ColumnDefinitions = new("Auto,*"), ColumnSpacing = 6 };
         back = UiFactory.Button("Назад", GoBack);
         back.IsEnabled = false;
         tools.Children.Add(back);
         Grid.SetColumn(pages, 1);
         tools.Children.Add(pages);
-        var reload = UiFactory.Button(
-            "Обновить",
-            () => Open(current ?? this.client.Resolve("overview.md"), false)
-        );
-        Grid.SetColumn(reload, 2);
-        tools.Children.Add(reload);
         grid.Children.Add(tools);
         Grid.SetRow(status, 1);
         grid.Children.Add(status);
         Grid.SetRow(scroll, 2);
         grid.Children.Add(scroll);
         Content = grid;
+        status.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == TextBlock.TextProperty)
+                status.IsVisible = !string.IsNullOrEmpty(status.Text);
+        };
         pages.SelectionChanged += async (_, _) =>
         {
             if (!selecting && pages.SelectedItem is ComboBoxItem { Tag: DocumentationPage page })
@@ -166,9 +169,7 @@ public sealed class DocumentationView : UserControl, IDisposable
                     && client.Resolve(page.Path).AbsolutePath == address.AbsolutePath
                 );
             selecting = false;
-            status.Text = resource.FromCache
-                ? "Нет сети. Показана сохранённая копия."
-                : "Руководство загружено";
+            status.Text = resource.FromCache ? "Нет сети. Показана сохранённая копия." : "";
             await rendered.LoadImages(token);
             if (!token.IsCancellationRequested)
                 rendered.ScrollTo(address.Fragment);

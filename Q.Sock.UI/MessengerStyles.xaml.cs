@@ -41,6 +41,8 @@ public sealed partial class MessengerStyles : Styles
             ["secondary"] = Blend(text, background, .32),
             ["message"] = Blend(text, background, .12),
             ["accentHover"] = Blend(Color.Parse(theme.Colors["accent"]), Colors.Black, .2),
+            ["link"] = Blend(Color.Parse(theme.Colors["accent"]), text, .28),
+            ["linkHover"] = Blend(Color.Parse(theme.Colors["accent"]), text, .48),
             ["danger"] = Color.Parse("#D9534F"),
         };
         if (theme.Colors["background"] == "#313338" && theme.Colors["surface"] == "#383A40")

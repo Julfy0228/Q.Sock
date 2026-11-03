@@ -2,13 +2,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Q.Sock.UI.MessengerStyles">
     <Style Selector="Button">
+        <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Background" Value="{DynamicResource surface}" />
         <Setter Property="Foreground" Value="{DynamicResource text}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="MinHeight" Value="40" />
+    </Style>
+    <Style Selector="Button:disabled">
+        <Setter Property="Cursor" Value="Arrow" />
     </Style>
     <Style Selector="TextBox">
         <Setter Property="Background" Value="{DynamicResource background}" />
@@ -16,16 +21,19 @@
         <Setter Property="BorderBrush" Value="{DynamicResource separator}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="4" />
-        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="MinHeight" Value="40" />
     </Style>
     <Style Selector="ComboBox">
         <Setter Property="Background" Value="{DynamicResource background}" />
         <Setter Property="Foreground" Value="{DynamicResource text}" />
         <Setter Property="BorderBrush" Value="{DynamicResource separator}" />
         <Setter Property="CornerRadius" Value="4" />
-        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="MinWidth" Value="0" />
     </Style>
     <Style Selector="CalendarDatePicker">
@@ -33,7 +41,8 @@
         <Setter Property="Foreground" Value="{DynamicResource text}" />
         <Setter Property="BorderBrush" Value="{DynamicResource separator}" />
         <Setter Property="CornerRadius" Value="4" />
-        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="MinWidth" Value="0" />
     </Style>
     <Style Selector="TimePicker">
@@ -41,12 +50,23 @@
         <Setter Property="Foreground" Value="{DynamicResource text}" />
         <Setter Property="BorderBrush" Value="{DynamicResource separator}" />
         <Setter Property="CornerRadius" Value="4" />
-        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="MinWidth" Value="0" />
     </Style>
     <Style Selector="Button.quiet">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.documentation-link">
+        <Setter Property="Foreground" Value="{DynamicResource link}" />
+    </Style>
+    <Style Selector="Button.documentation-link:pointerover">
+        <Setter Property="Foreground" Value="{DynamicResource linkHover}" />
+    </Style>
+    <Style Selector="Button.documentation-link:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource linkHover}" />
     </Style>
     <Style Selector="Button.quiet:pointerover /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource selection}" />
@@ -108,8 +128,8 @@
     <Style Selector="TextBox.search">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding" Value="4,10" />
-        <Setter Property="MinHeight" Value="44" />
+        <Setter Property="Padding" Value="4,0" />
+        <Setter Property="MinHeight" Value="40" />
         <Setter Property="FontSize" Value="13" />
     </Style>
 </Styles>
