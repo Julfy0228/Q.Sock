@@ -14,6 +14,7 @@ namespace Q.Sock.Server.Plugins.Moodle;
 
 public sealed class MoodleModule : IMessengerModule
 {
+    private const string DescriptorPath = "/modules/moodle/ui.json";
     private static readonly byte[] Descriptor = JsonSerializer.SerializeToUtf8Bytes(
         new
         {
@@ -54,7 +55,7 @@ public sealed class MoodleModule : IMessengerModule
             Id = Id,
             Title = "Запланировать занятие",
             Version = "1",
-            AssetUrl = "/api/modules/moodle/ui.json",
+            AssetUrl = DescriptorPath,
             Sha256 = Convert.ToHexString(SHA256.HashData(Descriptor)).ToLowerInvariant(),
             ActionUrl = "/api/modules/moodle/lessons",
             Fields =
@@ -109,6 +110,7 @@ public sealed class MoodleModule : IMessengerModule
 
     public void MapEndpoints(WebApplication app)
     {
+        app.MapGet(DescriptorPath, () => Results.Bytes(Descriptor, "application/json"));
         app.MapGet(
             "/api/modules/moodle/ui.json",
             () => Results.Bytes(Descriptor, "application/json")

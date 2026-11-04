@@ -17,21 +17,30 @@ final class client {
         $body = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         $timestamp = time();
         $signature = hash_hmac('sha256', $timestamp . "\n" . $body, $config->secret);
-        $curl = new \curl();
-        $curl->setHeader([
-            'Content-Type: application/json',
-            'X-QSock-Connection: ' . $config->connectionid,
-            'X-QSock-Time: ' . $timestamp,
-            'X-QSock-Signature: ' . $signature,
-        ]);
-
-        $apiurl = get_config('local_qsock', 'internalurl') ?: $config->serverurl;
-        $response = $curl->post(rtrim($apiurl, '/') . '/api/modules/moodle/' . $route, $body, [
-            'CURLOPT_CONNECTTIMEOUT' => 10,
-            'CURLOPT_TIMEOUT' => 40,
-        ]);
-
-        $status = $curl->get_info()['http_code'] ?? 0;
+        $internal = get_config('local_qsock', 'internalurl');
+        $parts = $internal ? parse_url($internal) : false;
+        $local = $parts && ($parts['scheme'] ?? '') === 'http' && ($parts['host'] ?? '') === '127.0.0.1'
+            && !empty($parts['port']) && empty($parts['user']) && empty($parts['pass']) && empty($parts['query'])
+            && empty($parts['fragment']) && empty($parts['path']) && in_array($route, ['sync', 'launch'], true);
+        $headers = ['Content-Type: application/json', 'X-QSock-Connection: ' . $config->connectionid,
+            'X-QSock-Time: ' . $timestamp, 'X-QSock-Signature: ' . $signature];
+        if ($local) {
+            $handle = curl_init(rtrim($internal, '/') . '/api/modules/moodle/' . $route);
+            curl_setopt_array($handle, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $body,
+                CURLOPT_HTTPHEADER => $headers, CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT => 40, CURLOPT_FOLLOWLOCATION => false, CURLOPT_PROXY => '']);
+            $response = curl_exec($handle);
+            $status = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+            curl_close($handle);
+        } else {
+            $curl = new \curl();
+            $curl->setHeader($headers);
+            $apiurl = $internal ?: $config->serverurl;
+            $response = $curl->post(rtrim($apiurl, '/') . '/api/modules/moodle/' . $route, $body, [
+                'CURLOPT_CONNECTTIMEOUT' => 10, 'CURLOPT_TIMEOUT' => 40, 'CURLOPT_FOLLOWLOCATION' => 0,
+            ]);
+            $status = $curl->get_info()['http_code'] ?? 0;
+        }
         if ($status < 200 || $status >= 300) {
             throw new \moodle_exception('servererror', 'local_qsock', '', $status);
         }
