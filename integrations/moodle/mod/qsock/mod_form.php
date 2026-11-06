@@ -10,7 +10,15 @@ class mod_qsock_mod_form extends moodleform_mod {
         $form->setType('name', PARAM_TEXT);
         $form->addRule('name', null, 'required');
         $this->standard_intro_elements();
-        $form->addElement('text', 'callid', get_string('callid', 'qsock'));
+        $options = ['' => get_string('courseroom', 'qsock')];
+        foreach ($this->course_lessons() as $lesson) {
+            $options[$lesson->callid] = format_string($lesson->name) . ' — ' . userdate($lesson->timestart);
+        }
+        $saved = $this->current->callid ?? '';
+        if ($saved !== '' && !isset($options[$saved])) {
+            $options[$saved] = get_string('previouslesson', 'qsock');
+        }
+        $form->addElement('select', 'callid', get_string('callid', 'qsock'), $options);
         $form->setType('callid', PARAM_ALPHANUMEXT);
         $form->addHelpButton('callid', 'callid', 'qsock');
         $this->standard_coursemodule_elements();
@@ -19,9 +27,20 @@ class mod_qsock_mod_form extends moodleform_mod {
 
     public function validation($data, $files): array {
         $errors = parent::validation($data, $files);
-        if (!empty($data['callid']) && !preg_match('/^[0-9a-f-]{36}$/i', $data['callid'])) {
+        $selected = $data['callid'] ?? '';
+        if ($selected !== '' && $selected !== ($this->current->callid ?? '') && !isset($this->course_lessons()[$selected])) {
             $errors['callid'] = get_string('invalidcallid', 'qsock');
         }
         return $errors;
+    }
+
+    private function course_lessons(): array {
+        global $DB;
+        $sql = 'SELECT m.callid, e.name, e.timestart
+                  FROM {local_qsock_events} m
+                  JOIN {event} e ON e.id = m.eventid AND e.courseid = m.courseid
+                 WHERE m.courseid = :courseid
+              ORDER BY e.timestart DESC, e.id DESC';
+        return $DB->get_records_sql($sql, ['courseid' => $this->get_course()->id]);
     }
 }
