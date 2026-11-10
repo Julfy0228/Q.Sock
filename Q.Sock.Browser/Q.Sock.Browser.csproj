@@ -29,11 +29,6 @@
     </ItemGroup>
     <ItemGroup>
         <Content Update="wwwroot/**" CopyToOutputDirectory="PreserveNewest" />
-        <Content
-            Include="../Q.Sock.Media.Web/src/*.js"
-            Link="wwwroot/media/%(Filename)%(Extension)"
-            CopyToOutputDirectory="PreserveNewest"
-        />
     </ItemGroup>
     <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk.WebAssembly" />
     <Target Name="CopyAvaloniaBrowserAssets" AfterTargets="Build">

@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FILES = {
     "/": ROOT / "tests/browser/index.html",
     "/checks.js": ROOT / "tests/browser/checks.js",
-    "/engine.js": ROOT / "Q.Sock.Media.Web/src/engine.js",
+    "/engine.js": ROOT / "Q.Sock.Browser/wwwroot/engine.js",
     "/plugin-cache.js": ROOT / "Q.Sock.Browser/wwwroot/plugin-cache.js",
 }
 

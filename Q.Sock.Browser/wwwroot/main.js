@@ -1,5 +1,5 @@
 import { dotnet } from './_framework/dotnet.js';
-import { media, configureMedia } from './media/bridge.js';
+import { media, configureMedia } from './bridge.js';
 import { scanQr } from './qr.js';
 import { pluginCache, verifyPluginSignature } from './plugin-cache.js';
 
