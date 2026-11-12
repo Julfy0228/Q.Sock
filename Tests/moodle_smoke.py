@@ -114,7 +114,7 @@ def main():
     updated = request(f"/api/chats/{room_id}/members", token=teacher_token)
     assert not next(member for member in updated if member["role"] == "student")["canWrite"]
 
-    signed("sync", {"users": [teacher, student], "courses": [{"id": course_id + 1, "name": "ЦДО", "members": course["members"]}], "fullSnapshot": False}, "cdo")
+    signed("sync", {"users": [teacher, student], "courses": [{"id": course_id + 1, "name": "Учебный сайт", "members": course["members"]}], "fullSnapshot": False}, "cdo")
     cdo_launch = launch(student_subject, course_id + 1, "cdo")
     student_id = request("/api/me", token=student_token)["id"]
     assert request("/api/me", token=cdo_launch["auth"]["accessToken"])["id"] == student_id

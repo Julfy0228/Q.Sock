@@ -138,12 +138,12 @@ def main():
     arguments = parser.parse_args()
     dotnet = str(Path(arguments.dotnet).resolve()) if Path(arguments.dotnet).exists() else arguments.dotnet
     if not arguments.no_build:
-        for project in ("Q.Sock.Server.Plugins.Moodle", "Q.Sock.Plugins.Moodle", "tools/Q.Sock.ModulePack", "tests/Q.Sock.Signaling.Tests", "tests/Q.Sock.Core.Tests", "tests/Q.Sock.Plugin.Tests", "tests/Q.Sock.UI.Tests"):
+        for project in ("Q.Sock.Server.Plugins.Moodle", "Q.Sock.Plugins.Moodle", "Tools/ModulePack", "Tests/Signaling", "Tests/Core", "Tests/Plugins", "Tests/UI"):
             run([dotnet, "build", project, "-m:1", "-nr:false", "-p:MSBuildEnableWorkloadResolver=false"] + (["--no-restore"] if arguments.no_restore else []))
     output = ROOT / "artifacts/verification" / uuid.uuid4().hex[:12]
     modules = output / "client-modules"
     run([
-        dotnet, "tools/Q.Sock.ModulePack/bin/Debug/net10.0/Q.Sock.ModulePack.dll",
+        dotnet, "Tools/ModulePack/bin/Debug/net10.0/Q.Sock.Tools.ModulePack.dll",
         str(ROOT / "Q.Sock.Plugins.Moodle/bin/Debug/net10.0/Q.Sock.Plugins.Moodle.dll"),
         str(modules), str(output / "publisher.pem"), "moodle", "1.0.0", "Fixture Moodle",
         "Q.Sock.Plugins.Moodle.MoodleClientPlugin", "lesson-planning",
@@ -166,12 +166,12 @@ def main():
         moodle = start_server(dotnet, output / "moodle", modules, f"http://127.0.0.1:{fixture.server_port}")
         servers.append(moodle)
         environment = dict(os.environ, QSOCK_TEST_URL=base[2], QSOCK_MOODLE_TEST_URL=moodle[2], QSOCK_EXPECT_CLIENT_MODULES="1", QSOCK_MOODLE_HTTP_FIXTURE="1")
-        run([sys.executable, "tests/api_smoke.py"], environment)
-        run([sys.executable, "tests/moodle_smoke.py"], environment)
-        run([dotnet, "tests/Q.Sock.Signaling.Tests/bin/Debug/net10.0/Q.Sock.Signaling.Tests.dll", base[2]])
-        run([dotnet, "tests/Q.Sock.Core.Tests/bin/Debug/net10.0/Q.Sock.Core.Tests.dll"])
-        run([dotnet, "tests/Q.Sock.Plugin.Tests/bin/Debug/net10.0/Q.Sock.Plugin.Tests.dll"])
-        run([dotnet, "tests/Q.Sock.UI.Tests/bin/Debug/net10.0/Q.Sock.UI.Tests.dll", str(output / "icons")])
+        run([sys.executable, "Tests/api_smoke.py"], environment)
+        run([sys.executable, "Tests/moodle_smoke.py"], environment)
+        run([dotnet, "Tests/Signaling/bin/Debug/net10.0/Q.Sock.Tests.Signaling.dll", base[2]])
+        run([dotnet, "Tests/Core/bin/Debug/net10.0/Q.Sock.Tests.Core.dll"])
+        run([dotnet, "Tests/Plugins/bin/Debug/net10.0/Q.Sock.Tests.Plugins.dll"])
+        run([dotnet, "Tests/UI/bin/Debug/net10.0/Q.Sock.Tests.UI.dll", str(output / "icons")])
         deadline = time.monotonic() + 30
         while not MoodleHttpFixture.records and time.monotonic() < deadline:
             time.sleep(0.2)

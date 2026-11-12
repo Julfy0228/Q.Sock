@@ -2,6 +2,8 @@ using System.Net;
 using System.Text;
 using Q.Sock.Core;
 
+namespace Q.Sock.Tests.Core;
+
 internal static class DocumentationChecks
 {
     public static async Task Run()

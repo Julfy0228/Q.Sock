@@ -8,6 +8,8 @@ using Avalonia.VisualTree;
 using Q.Sock.Core;
 using Q.Sock.UI;
 
+namespace Q.Sock.Tests.UI;
+
 internal static class DocumentationUiChecks
 {
     public static void Run()

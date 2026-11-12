@@ -9,6 +9,8 @@ using Q.Sock.UI;
 using Q.Sock.UI.ViewModels;
 using Q.Sock.UI.Views;
 
+namespace Q.Sock.Tests.UI;
+
 internal static class XamlViewChecks
 {
     public static void Run()

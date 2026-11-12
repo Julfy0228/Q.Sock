@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <RootNamespace>Q.Sock.Tests.Signaling</RootNamespace>
+        <AssemblyName>Q.Sock.Tests.Signaling</AssemblyName>
         <OutputType>Exe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../../Q.Sock.UI/Q.Sock.UI.csproj" />
+        <ProjectReference Include="../../Q.Sock.Core/Q.Sock.Core.csproj" />
     </ItemGroup>
 </Project>

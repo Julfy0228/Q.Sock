@@ -159,7 +159,7 @@ const output = JSON.stringify(icons) + '\n';
 const compressed = gzipSync(output, { level: 9 });
 await writeFile(join(repository, 'Q.Sock.UI/Resources/material-icons.json.gz'), compressed);
 await writeFile(join(repository, 'licenses/MUI-icons.txt'), await readFile(join(packageRoot, 'LICENSE')));
-await writeFile(join(repository, 'tools/icons/material-icons-source.json'), JSON.stringify({
+await writeFile(join(repository, 'Tools/Icons/material-icons-source.json'), JSON.stringify({
   package: metadata.name,
   version,
   tarball: `https://registry.npmjs.org/@mui/icons-material/-/icons-material-${version}.tgz`,

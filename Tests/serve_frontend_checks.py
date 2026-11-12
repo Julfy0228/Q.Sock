@@ -53,7 +53,7 @@ def seed(base):
         {'id': 101, 'name': 'Проектирование ИС', 'members': members},
         {'id': 102, 'name': 'Управление данными', 'members': members},
     ], 'fullSnapshot': True})
-    moodle_smoke.signed('sync', {'users': users, 'courses': [{'id': 201, 'name': 'ЦДО · Консультации', 'members': members}], 'fullSnapshot': True}, 'cdo')
+    moodle_smoke.signed('sync', {'users': users, 'courses': [{'id': 201, 'name': 'Учебный сайт · Консультации', 'members': members}], 'fullSnapshot': True}, 'cdo')
     sessions = {user['subject']: moodle_smoke.launch(user['subject'], 101) for user in users}
     tokens = {subject: session['auth']['accessToken'] for subject, session in sessions.items()}
     teacher = tokens['frontend-teacher']

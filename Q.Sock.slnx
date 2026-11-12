@@ -1,15 +1,31 @@
 <Solution>
-  <Folder Name="/Элементы решения/">
+  <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
   </Folder>
-  <Project Path="Q.Sock.Server/Q.Sock.Server.csproj" Id="581f5b6e-ec1c-47c9-8bbf-77226f575507" />
-  <Project Path="Q.Sock.Shared/Q.Sock.Shared.csproj" Id="055a0918-ab6f-41da-9ffb-7fb33a94f5f6" />
-  <Project Path="Q.Sock.Client/Q.Sock.Client.csproj" />
-  <Project Path="Q.Sock.Core/Q.Sock.Core.csproj" />
-  <Project Path="Q.Sock.UI/Q.Sock.UI.csproj" />
-  <Project Path="Q.Sock.Browser/Q.Sock.Browser.csproj" />
-  <Project Path="Q.Sock.Plugins.Moodle/Q.Sock.Plugins.Moodle.csproj" />
-  <Project Path="Q.Sock.PluginContracts/Q.Sock.PluginContracts.csproj" />
-  <Project Path="tools/Q.Sock.ModulePack/Q.Sock.ModulePack.csproj" />
-  <Project Path="Q.Sock.Server.Plugins.Moodle/Q.Sock.Server.Plugins.Moodle.csproj" />
+  <Folder Name="/Client/">
+    <Project Path="Q.Sock.Client/Q.Sock.Client.csproj" />
+    <Project Path="Q.Sock.Browser/Q.Sock.Browser.csproj" />
+    <Project Path="Q.Sock.UI/Q.Sock.UI.csproj" />
+    <Project Path="Q.Sock.PluginContracts/Q.Sock.PluginContracts.csproj" />
+  </Folder>
+  <Folder Name="/Server/">
+    <Project Path="Q.Sock.Server/Q.Sock.Server.csproj" Id="581f5b6e-ec1c-47c9-8bbf-77226f575507" />
+  </Folder>
+  <Folder Name="/Moodle/">
+    <Project Path="Q.Sock.Plugins.Moodle/Q.Sock.Plugins.Moodle.csproj" />
+    <Project Path="Q.Sock.Server.Plugins.Moodle/Q.Sock.Server.Plugins.Moodle.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="Q.Sock.Core/Q.Sock.Core.csproj" />
+    <Project Path="Q.Sock.Shared/Q.Sock.Shared.csproj" Id="055a0918-ab6f-41da-9ffb-7fb33a94f5f6" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="Tools/ModulePack/ModulePack.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Core/Core.csproj" />
+    <Project Path="Tests/Plugins/Plugins.csproj" />
+    <Project Path="Tests/Signaling/Signaling.csproj" />
+    <Project Path="Tests/UI/UI.csproj" />
+  </Folder>
 </Solution>
