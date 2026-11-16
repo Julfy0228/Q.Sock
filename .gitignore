@@ -299,7 +299,6 @@ Q.Sock.Server/state/
 Q.Sock.Server/storage/
 Q.Sock.Server/client-modules/
 Q.Sock.Server/appsettings.Local.json
-deployment/.env
 Q.Sock.Server/wwwroot/app/
 Q.Sock.Server/wwwroot/avalonia/
 *.qsock-theme.json
