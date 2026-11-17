@@ -379,6 +379,3 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-
-# Временно не буду публиковать docs, я над ними ещё поработаю
-docs/*
