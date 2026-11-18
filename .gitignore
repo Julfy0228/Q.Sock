@@ -267,6 +267,7 @@ Generated_Code/
 # because we have git ;-)
 _UpgradeReport_Files/
 Backup*/
+!/integrations/moodle/mod/qsock/backup/
 UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/
