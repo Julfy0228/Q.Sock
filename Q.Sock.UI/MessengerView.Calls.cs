@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using Avalonia.Media;
 using Avalonia.Threading;
 using Q.Sock.Shared.Models;
 using Q.Sock.UI.Calls;
@@ -15,7 +14,10 @@ public sealed partial class MessengerView
     private Guid? activeCallId;
     private Border? callOverlay;
     private Grid? callContent;
+    private Border? callVideoPanel;
     private Border? callChatPanel;
+    private Border? callMembersPanel;
+    private bool callMembersOpen;
     private StackPanel? callDiscussion;
     private Guid? callDiscussionChat;
 
@@ -98,7 +100,10 @@ public sealed partial class MessengerView
             ColumnDefinitions = new ColumnDefinitions("*,0"),
             Margin = new Thickness(20, 16),
         };
-        callContent.Children.Add(Surface(session.View, "popup", new Thickness(8), 12));
+        callVideoPanel = Surface(session.View, "popup", new Thickness(8), 12);
+        callContent.Children.Add(callVideoPanel);
+        callMembersPanel = Surface(new ScrollViewer(), "panel", radius: 12);
+        callContent.Children.Add(callMembersPanel);
         callDiscussionChat = callChat?.GuildId is { } guild
             ? chats.FirstOrDefault(chat => chat.GuildId == guild && chat.Type == "channel")?.Id
                 ?? call.ChatId
@@ -152,32 +157,19 @@ public sealed partial class MessengerView
         controls.Children.Add(microphone);
         controls.Children.Add(camera);
         controls.Children.Add(screen);
-        controls.Children.Add(
-            IconButton(
-                "PeopleOutlined",
-                "Участники",
-                () => Run(() => ShowCallMembers(call)),
-                compact: true
-            )
-        );
+        if (callChat?.Type != "direct")
+            controls.Children.Add(
+                IconButton(
+                    "PeopleOutlined", "Участники",
+                    () => Run(() => ToggleCallMembers(call)), compact: true
+                )
+            );
         controls.Children.Add(
             IconButton("ChatBubbleOutlineOutlined", "Обсуждение", OpenCallDiscussion, compact: true)
         );
-        var leave = IconButton("CallEnd", "Выйти из звонка", () => Run(LeaveCall), compact: true);
-        leave.Classes.Add("danger");
-        controls.Children.Add(leave);
-        if (callChat?.CanManage == true || callChat?.Type == "direct")
-            controls.Children.Add(
-                Button(
-                    "Завершить для всех",
-                    () =>
-                        Run(async () =>
-                        {
-                            await client.Mutate($"api/calls/{callId}/end", HttpMethod.Post);
-                            await LeaveCall();
-                        })
-                )
-            );
+        controls.Children.Add(
+            CallEndControl(callId, client, callChat is not null && (CanManageChat(callChat) || callChat.Type == "direct"))
+        );
         var footer = Column(controls, notice);
         footer.Spacing = 4;
         var footerSurface = Surface(footer, "chrome", new Thickness(16));
@@ -200,14 +192,43 @@ public sealed partial class MessengerView
         }
     }
 
+    private Control CallEndControl(Guid callId, Q.Sock.Core.MessengerClient source, bool canEnd)
+    {
+        var leave = IconButton("CallEnd", "Выйти из звонка", () => Run(LeaveCall), compact: true);
+        leave.Classes.Add("danger");
+        if (!canEnd)
+            return leave;
+
+        leave.CornerRadius = new CornerRadius(20, 0, 0, 20);
+        var menu = new ContextMenu();
+        AddMemberAction(menu, "Завершить для всех", async () =>
+        {
+            await source.Mutate($"api/calls/{callId}/end", HttpMethod.Post);
+            if (activeCallId == callId)
+                await LeaveCall();
+        }, destructive: true);
+        var more = IconButton("ExpandMore", "Варианты завершения звонка", () => Task.CompletedTask, compact: true);
+        more.Width = 28;
+        more.CornerRadius = new CornerRadius(0, 20, 20, 0);
+        more.Classes.Add("danger");
+        more.Click += (_, _) => menu.Open(more);
+        AttachContextMenu(more, menu);
+        var split = Row(leave, more);
+        split.Spacing = 0;
+        return split;
+    }
+
     private void UpdateCallLayout()
     {
-        if (callContent is null || callChatPanel is null)
+        if (callContent is null || callChatPanel is null || callMembersPanel is null || callVideoPanel is null)
             return;
         var wide = Bounds.Width >= 1100;
         callContent.ColumnDefinitions[1].Width = new GridLength(wide ? 320 : 0);
         callContent.ColumnSpacing = wide ? 20 : 0;
-        callChatPanel.IsVisible = wide;
+        callChatPanel.IsVisible = wide && !callMembersOpen;
+        callVideoPanel.IsVisible = wide || !callMembersOpen;
+        callMembersPanel.IsVisible = callMembersOpen;
+        Grid.SetColumn(callMembersPanel, wide ? 1 : 0);
         callContent.Margin = new Thickness(Bounds.Width < 760 ? 12 : 20, 16);
     }
 
@@ -269,7 +290,10 @@ public sealed partial class MessengerView
         activeCallId = null;
         callOverlay = null;
         callContent = null;
+        callVideoPanel = null;
         callChatPanel = null;
+        callMembersPanel = null;
+        callMembersOpen = false;
         callDiscussion = null;
         callDiscussionChat = null;
         if (overlay is not null)
@@ -278,48 +302,68 @@ public sealed partial class MessengerView
             await session.DisposeAsync();
     }
 
-    private async Task ShowCallMembers(CallInfo call)
+    private async Task ToggleCallMembers(CallInfo call)
     {
-        var members = await client!.Get<System.Text.Json.JsonElement[]>(
-            $"api/calls/{call.Id}/members"
-        );
+        callMembersOpen = !callMembersOpen;
+        UpdateCallLayout();
+        if (callMembersOpen)
+            await LoadCallMembers(call);
+    }
+
+    private async Task LoadCallMembers(CallInfo call)
+    {
+        if (client is not { } source || callMembersPanel?.Child is not ScrollViewer scroll)
+            return;
+        var members = await source.Get<System.Text.Json.JsonElement[]>($"api/calls/{call.Id}/members");
+        if (client != source || activeCallId != call.Id || callMembersPanel?.Child != scroll)
+            return;
+
         var chat = chats.FirstOrDefault(chat => chat.Id == call.ChatId);
-        var canModerate = chat?.CanManage == true && chat.Type != "direct";
-        var list = new StackPanel { Spacing = 12 };
+        var canModerate = chat is { Type: not "direct" } && CanManageChat(chat);
+        var list = new StackPanel { Spacing = 8, Margin = new Thickness(12) };
+        var title = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        var heading = Text($"Участники звонка · {members.Length}", 16, strong: true);
+        heading.VerticalAlignment = VerticalAlignment.Center;
+        title.Children.Add(heading);
+        var close = IconButton(
+            "Close", "Закрыть список участников звонка",
+            () => Run(() => ToggleCallMembers(call)), compact: true
+        );
+        Grid.SetColumn(close, 1);
+        title.Children.Add(close);
+        list.Children.Add(title);
         foreach (var member in members)
         {
             var userId = member.GetProperty("userId").GetGuid();
-            var item = Column(Text(member.GetProperty("name").GetString() ?? "Участник"));
-            if (canModerate && userId != profile?.Id)
+            var name = member.GetProperty("name").GetString() ?? "Участник";
+            var item = PersonIdentity(name, userId);
+            if (!canModerate || userId == profile?.Id)
             {
-                var muted = member.GetProperty("muted").GetBoolean();
-                var share = member.GetProperty("canShare").GetBoolean();
-                async Task Moderate(string action)
-                {
-                    await client.Mutate(
-                        $"api/calls/{call.Id}/members/{userId}/{action}",
-                        System.Net.Http.HttpMethod.Post
-                    );
-                    await ShowCallMembers(call);
-                }
-                item.Children.Add(
-                    Button(
-                        muted ? "Разрешить микрофон" : "Отключить микрофон",
-                        () => Run(() => Moderate(muted ? "allow-mic" : "mute"))
-                    )
-                );
-                item.Children.Add(
-                    Button(
-                        share ? "Запретить демонстрацию" : "Разрешить демонстрацию",
-                        () => Run(() => Moderate(share ? "deny-share" : "allow-share"))
-                    )
-                );
-                item.Children.Add(
-                    Button("Исключить из звонка", () => Run(() => Moderate("remove")))
-                );
+                list.Children.Add(Surface(item, "panel", new Thickness(6, 5)));
+                continue;
             }
-            list.Children.Add(Card(item));
+
+            var muted = member.GetProperty("muted").GetBoolean();
+            var share = member.GetProperty("canShare").GetBoolean();
+            async Task Moderate(string action)
+            {
+                await source.Mutate($"api/calls/{call.Id}/members/{userId}/{action}", HttpMethod.Post);
+                await LoadCallMembers(call);
+            }
+            var menu = new ContextMenu();
+            AddMemberAction(menu, muted ? "Разрешить говорить" : "Запретить говорить",
+                () => Moderate(muted ? "allow-mic" : "mute"));
+            AddMemberAction(menu, share ? "Запретить показ экрана" : "Разрешить показ экрана",
+                () => Moderate(share ? "deny-share" : "allow-share"));
+            AddMemberAction(menu, "Исключить из звонка", () => Moderate("remove"), destructive: true);
+            var button = Button($"Действия: {name}", () => Task.CompletedTask);
+            button.Classes.Add("quiet");
+            button.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+            button.Content = item;
+            button.Click += (_, _) => menu.Open(button);
+            AttachContextMenu(button, menu);
+            list.Children.Add(button);
         }
-        await ShowDialog("Участники звонка", list);
+        scroll.Content = list;
     }
 }
