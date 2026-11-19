@@ -2,6 +2,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:Q.Sock.UI.ViewModels"
+    xmlns:views="clr-namespace:Q.Sock.UI.Views"
     x:Class="Q.Sock.UI.Views.LoginView"
     x:DataType="vm:LoginViewModel"
     x:CompileBindings="True"
@@ -37,22 +38,11 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
             >
-                <Border
+                <views:LogoMark
                     Width="58"
                     Height="58"
-                    CornerRadius="29"
                     HorizontalAlignment="Left"
-                    Background="{DynamicResource accent}"
-                >
-                    <TextBlock
-                        Text="М"
-                        FontSize="16"
-                        FontWeight="SemiBold"
-                        Foreground="White"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                    />
-                </Border>
+                />
                 <TextBlock
                     Text="Q.Sock"
                     FontSize="28"
