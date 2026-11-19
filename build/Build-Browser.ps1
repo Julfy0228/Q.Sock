@@ -22,6 +22,7 @@ function Move-GeneratedOutputToHistory([string]$Path) {
     Move-Item -LiteralPath $resolved -Destination $history
 }
 if ($Publish) {
+    Move-GeneratedOutputToHistory (Join-Path $repository "Q.Sock.Browser/obj/$Configuration/net10.0-browser/linked")
     Move-GeneratedOutputToHistory (Join-Path $repository "Q.Sock.Browser/bin/$Configuration/net10.0-browser/publish/wwwroot")
     Move-GeneratedOutputToHistory (Join-Path $repository "Q.Sock.Browser/bin/$Configuration/net10.0-browser/wwwroot")
 }

@@ -9,6 +9,8 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <WasmMainJSPath>wwwroot/main.js</WasmMainJSPath>
         <WasmBuildNative>true</WasmBuildNative>
+        <PublishTrimmed>false</PublishTrimmed>
+        <WasmLinkIcalls>false</WasmLinkIcalls>
         <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     </PropertyGroup>
     <ItemGroup>
