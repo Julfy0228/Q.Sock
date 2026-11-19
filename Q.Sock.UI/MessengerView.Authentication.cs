@@ -1,4 +1,3 @@
-using System.Net.Http;
 using Q.Sock.Core;
 using Q.Sock.Shared.Models;
 using Q.Sock.UI.ViewModels;

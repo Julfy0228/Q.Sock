@@ -1,4 +1,3 @@
-using System.Net.Http;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;

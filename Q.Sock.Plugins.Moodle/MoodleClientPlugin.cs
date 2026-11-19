@@ -1,4 +1,3 @@
-using System.Net.Http;
 using Avalonia.Controls;
 using Q.Sock.Shared.Models;
 using Q.Sock.UI;
