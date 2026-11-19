@@ -72,14 +72,8 @@ public sealed partial class MessengerView
             Spacing = 2,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        actions.Children.Add(
-            IconButton(
-                chat.Type == "room" ? "Headset" : "Call",
-                chat.Type == "room" ? "Войти в комнату" : "Звонок",
-                () => Run(StartCall),
-                compact: true
-            )
-        );
+        if (chat.Type != "room")
+            actions.Children.Add(IconButton("Call", "Звонок", () => Run(StartCall), compact: true));
         actions.Children.Add(
             IconButton("PeopleOutlined", "Участники", () => Run(ShowMembers), compact: true)
         );
@@ -205,16 +199,39 @@ public sealed partial class MessengerView
     {
         if (conversationLesson is null || selectedChat is null)
             return;
+        var chat = selectedChat;
         var call = availableCalls.FirstOrDefault(call =>
             call.Status == "live"
             && (
-                call.ChatId == selectedChat.Id
-                || selectedChat.GuildId is not null
-                    && chats.Any(chat =>
-                        chat.Id == call.ChatId && chat.GuildId == selectedChat.GuildId
+                call.ChatId == chat.Id
+                || chat.Type != "room"
+                    && chat.GuildId is not null
+                    && chats.Any(channel =>
+                        channel.Id == call.ChatId && channel.GuildId == chat.GuildId
                     )
             )
         );
+        if (chat.Type == "room")
+        {
+            var join = Primary(
+                "Войти в голосовую комнату",
+                () => Run(call is null ? StartCall : () => OpenCall(call.Id))
+            );
+            join.HorizontalAlignment = HorizontalAlignment.Left;
+            var description = Text(
+                call is null
+                    ? "В учебной комнате занятие сначала запускает преподаватель."
+                    : "Звонок уже идёт.",
+                13,
+                "secondary"
+            );
+            description.IsVisible = call is not null || chat.Managed && !chat.CanManage;
+            conversationLesson.Child = Card(
+                Column(Text("Голосовая комната", 16, strong: true), description, join)
+            );
+            conversationLesson.IsVisible = true;
+            return;
+        }
         conversationLesson.IsVisible = call is not null;
         conversationLesson.Child = call is null ? null : LessonCard(call);
     }

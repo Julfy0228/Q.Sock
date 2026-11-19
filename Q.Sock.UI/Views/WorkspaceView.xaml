@@ -28,7 +28,7 @@
                 <ContentControl x:Name="DesktopActionsHost" Grid.Column="1" />
             </Grid>
         </Border>
-        <Grid x:Name="WorkspaceGrid" Grid.Row="1" ColumnDefinitions="64,280,*">
+        <Grid x:Name="WorkspaceGrid" Grid.Row="1" ColumnDefinitions="72,280,*,0">
             <Border x:Name="RailPanel" Background="{DynamicResource chrome}">
                 <ScrollViewer>
                     <StackPanel x:Name="RailItemsPanel" Spacing="16" Margin="12,14" />

@@ -44,11 +44,11 @@ public partial class WorkspaceView : UserControl
         ConversationPanel.IsVisible = !narrow || showingConversation;
         MembersPanel.IsVisible = showMembers;
         BottomBar.IsVisible = narrow && !showingConversation;
-        WorkspaceGrid.ColumnDefinitions = new ColumnDefinitions(
-            narrow ? "*"
-            : showMembers ? "76,280,*,280"
-            : "64,280,*"
-        );
+        var columns = WorkspaceGrid.ColumnDefinitions;
+        columns[0].Width = narrow ? GridLength.Star : new GridLength(72);
+        columns[1].Width = new GridLength(narrow ? 0 : 280);
+        columns[2].Width = narrow ? new GridLength(0) : GridLength.Star;
+        columns[3].Width = new GridLength(showMembers ? 280 : 0);
         Grid.SetColumn(SidebarPanel, narrow ? 0 : 1);
         Grid.SetColumn(ConversationPanel, narrow ? 0 : 2);
     }

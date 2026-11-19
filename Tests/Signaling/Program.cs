@@ -23,6 +23,27 @@ internal static class Program
                 new CreateChat { Type = "direct", UserIds = [bob.Profile.Id] }
             );
             var directId = direct.GetProperty("id").GetGuid();
+            var changes = Channel.CreateUnbounded<JsonElement>();
+            using var changeSubscription = bob.Client.Connection!.On<JsonElement>(
+                "Changed",
+                change => changes.Writer.TryWrite(change)
+            );
+            var message = await alice.Client.Post<JsonElement>(
+                $"api/chats/{directId}/messages",
+                new SendMessageRequest { Text = "Realtime delivery", ClientOperationId = Guid.NewGuid() }
+            );
+            using var deliveryDeadline = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            JsonElement notification;
+            do
+            {
+                notification = await changes.Reader.ReadAsync(deliveryDeadline.Token);
+            } while (notification.GetProperty("kind").GetString() != "message");
+            Check(
+                notification.GetProperty("chatId").GetGuid() == directId
+                    && notification.GetProperty("value").GetProperty("id").GetGuid()
+                        == message.GetProperty("id").GetGuid(),
+                "Участник чата должен сразу получить событие нового сообщения."
+            );
             Check(
                 (await alice.Client.Get<ChatInfo[]>("api/chats")).Single(chat => chat.Id == directId).Name
                     == bob.Profile.UserName,

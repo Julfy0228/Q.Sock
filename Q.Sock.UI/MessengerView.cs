@@ -65,6 +65,7 @@ public sealed partial class MessengerView : UserControl
     private UiManifest? manifest;
     private ServerInfo? serverInfo;
     private bool refreshAgain;
+    private bool refreshConversationAgain;
     private string messageSearch = "";
     private int historyPages = 1;
     private int historyRequest;
@@ -305,7 +306,10 @@ public sealed partial class MessengerView : UserControl
             UpdateSession(saved, session);
             Dispatcher.UIThread.Post(async () => await accountRepository.SaveAsync(accounts));
         };
-        client.Changed += _ => Dispatcher.UIThread.Post(async () => await Run(RefreshWorkspace));
+        client.Changed += change =>
+            Dispatcher.UIThread.Post(
+                async () => await Run(() => HandleWorkspaceChange(connectedClient, change))
+            );
         client.SessionRevoked += () =>
             Dispatcher.UIThread.Post(async () =>
             {
@@ -350,33 +354,82 @@ public sealed partial class MessengerView : UserControl
         pluginTimer.Start();
     }
 
-    private async Task RefreshWorkspace()
+    private async Task HandleWorkspaceChange(MessengerClient source, JsonElement change)
     {
-        if (client is null)
+        if (client != source)
+            return;
+        if (
+            change.TryGetProperty("kind", out var kind)
+            && kind.GetString() is "message" or "read"
+            && change.TryGetProperty("chatId", out var chat)
+            && chat.TryGetGuid(out var chatId)
+        )
+        {
+            try
+            {
+                if (selectedChat?.Id == chatId && showConversation)
+                    await LoadMessages();
+                if (client == source && callDiscussionChat == chatId)
+                    await RefreshCallDiscussion();
+            }
+            finally
+            {
+                if (client == source)
+                    await RefreshWorkspace(refreshConversation: false);
+            }
+            return;
+        }
+        await RefreshWorkspace();
+    }
+
+    private Task RefreshWorkspace() => RefreshWorkspace(refreshConversation: true);
+
+    private async Task RefreshWorkspace(bool refreshConversation)
+    {
+        var source = client;
+        if (source is null)
             return;
         if (refreshing)
         {
             refreshAgain = true;
+            refreshConversationAgain |= refreshConversation;
             return;
         }
         refreshAgain = false;
+        refreshConversationAgain = false;
         refreshing = true;
         try
         {
-            chats = await client.Get<ChatInfo[]>("api/chats");
-            guilds = await client.Get<GuildInfo[]>("api/guilds");
-            availableCalls = await client.Get<CallInfo[]>("api/calls");
+            var updatedChats = await source.Get<ChatInfo[]>("api/chats");
+            if (client != source)
+                return;
+            chats = updatedChats;
+            if (refreshConversation)
+            {
+                var updatedGuilds = await source.Get<GuildInfo[]>("api/guilds");
+                var updatedCalls = await source.Get<CallInfo[]>("api/calls");
+                if (client != source)
+                    return;
+                guilds = updatedGuilds;
+                availableCalls = updatedCalls;
+            }
             RebuildNavigation();
-            if (activeCall is not null)
+            if (refreshConversation && activeCall is not null)
                 await RefreshCallDiscussion();
+            if (client != source)
+                return;
             if (selectedChat is not null)
             {
                 selectedChat = chats.FirstOrDefault(item => item.Id == selectedChat.Id);
                 if (selectedChat is not null)
                 {
-                    await LoadConversationMembers();
-                    RefreshLessonBanner();
-                    await LoadMessages();
+                    if (refreshConversation)
+                    {
+                        RefreshLessonBanner();
+                        await LoadConversationMembers();
+                        if (client == source && showConversation)
+                            await LoadMessages();
+                    }
                 }
                 else
                 {
@@ -395,7 +448,7 @@ public sealed partial class MessengerView : UserControl
             refreshing = false;
         }
         if (refreshAgain)
-            await RefreshWorkspace();
+            await RefreshWorkspace(refreshConversationAgain);
     }
 
     private async Task SelectChat(ChatInfo chat)
@@ -412,14 +465,14 @@ public sealed partial class MessengerView : UserControl
         showConversation = true;
         RebuildNavigation();
         UpdateLayoutMode();
-        await LoadConversationMembers();
         RefreshLessonBanner();
-        await LoadMessages();
+        await Task.WhenAll(LoadConversationMembers(), LoadMessages());
     }
 
     private async Task LoadMessages(bool showOlder = false)
     {
-        if (selectedChat is null || client is null)
+        var source = client;
+        if (selectedChat is null || source is null)
             return;
         var currentChat = selectedChat.Id;
         var request = ++historyRequest;
@@ -428,7 +481,7 @@ public sealed partial class MessengerView : UserControl
         var hasOlder = false;
         for (var page = 0; page < historyPages; page++)
         {
-            var batch = await client.Get<ChatMessage[]>(
+            var batch = await source.Get<ChatMessage[]>(
                 $"api/chats/{currentChat}/messages?offset={page * 100}&search={query}"
             );
             messages.AddRange(batch);
@@ -436,7 +489,7 @@ public sealed partial class MessengerView : UserControl
             if (!hasOlder)
                 break;
         }
-        if (selectedChat?.Id != currentChat || request != historyRequest)
+        if (client != source || selectedChat?.Id != currentChat || request != historyRequest)
             return;
         messageList.Children.Clear();
         if (messageSearch.Length > 0)
@@ -502,16 +555,10 @@ public sealed partial class MessengerView : UserControl
                     )
                 )
             );
-        await client.Mutate($"api/chats/{currentChat}/read", HttpMethod.Post);
-        if (chats.FirstOrDefault(chat => chat.Id == currentChat) is { UnreadCount: > 0 } readChat)
-        {
-            readChat.UnreadCount = 0;
-            RebuildNavigation();
-        }
         Dispatcher.UIThread.Post(
             () =>
             {
-                if (selectedChat?.Id != currentChat || request != historyRequest)
+                if (client != source || selectedChat?.Id != currentChat || request != historyRequest)
                     return;
                 if (showOlder)
                     messageScroll.Offset = default;
@@ -520,6 +567,15 @@ public sealed partial class MessengerView : UserControl
             },
             DispatcherPriority.Loaded
         );
+        await source.Mutate($"api/chats/{currentChat}/read", HttpMethod.Post);
+        if (
+            client == source
+            && chats.FirstOrDefault(chat => chat.Id == currentChat) is { UnreadCount: > 0 } readChat
+        )
+        {
+            readChat.UnreadCount = 0;
+            RebuildNavigation();
+        }
     }
 
     private async Task SendMessage()

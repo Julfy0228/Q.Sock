@@ -17,10 +17,10 @@ public sealed class MessengerService(
     {
         var users = await db
             .ChatParticipants.Where(x => x.ChatId == chatId && x.Active)
-            .Select(x => x.UserId.ToString())
+            .Select(x => x.UserId)
             .ToListAsync();
         await hub
-            .Clients.Users(users)
+            .Clients.Users(users.Select(user => user.ToString()))
             .SendAsync(
                 "Changed",
                 new

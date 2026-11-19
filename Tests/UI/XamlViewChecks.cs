@@ -194,32 +194,53 @@ internal static class XamlViewChecks
     private static void CheckWorkspaceLayout()
     {
         var view = new WorkspaceView();
-        view.SetLayout(390, false, false);
-        Check(
-            view.Workspace.ColumnDefinitions.Count == 1 && view.Navigation.IsEffectivelyVisible,
-            "Узкая компоновка должна показывать список чатов."
-        );
-        view.SetLayout(390, true, false);
-        Check(
-            !view.FindControl<Border>("SidebarPanel")!.IsVisible && view.Conversation.IsVisible,
-            "В узком окне переписка должна заменять список."
-        );
-        view.SetLayout(1280, true, false);
-        Check(
-            view.FindControl<Border>("MembersPanel")!.IsVisible
-                && view.Workspace.ColumnDefinitions.Count == 4,
-            "В широком групповом чате должна быть панель участников."
-        );
-        view.SetLayout(1280, true, true);
-        Check(
-            !view.FindControl<Border>("MembersPanel")!.IsVisible,
-            "Личный чат не должен получать групповую панель."
-        );
-        view.SetLayout(760, false, false);
-        Check(
-            view.FindControl<Border>("DesktopHeader")!.IsVisible
-                && !view.FindControl<Border>("BottomBar")!.IsVisible,
-            "Граница адаптивности изменилась."
+        var sidebar = view.FindControl<Border>("SidebarPanel")!;
+        var members = view.FindControl<Border>("MembersPanel")!;
+        WithWindow(
+            view,
+            window =>
+            {
+                void Arrange(double width, bool showingConversation, bool directChat)
+                {
+                    window.Width = width;
+                    view.SetLayout(width, showingConversation, directChat);
+                    Dispatcher.UIThread.RunJobs();
+                    window.UpdateLayout();
+                }
+
+                Arrange(390, false, false);
+                Check(
+                    sidebar.IsEffectivelyVisible && sidebar.Bounds.Width == view.Workspace.Bounds.Width,
+                    "Список чатов должен занимать всю ширину узкого окна."
+                );
+                Arrange(390, true, false);
+                Check(
+                    !sidebar.IsVisible
+                        && view.Conversation.IsVisible
+                        && view.Conversation.Bounds.Width == view.Workspace.Bounds.Width,
+                    "В узком окне переписка должна заменять список."
+                );
+                Arrange(1280, true, false);
+                Check(
+                    members.IsVisible
+                        && sidebar.Bounds.Right == view.Conversation.Bounds.Left
+                        && view.Conversation.Bounds.Right == members.Bounds.Left
+                        && members.Bounds.Right == view.Workspace.Bounds.Width,
+                    "В широком окне чат должен быть между каналами и участниками."
+                );
+                Arrange(1280, true, true);
+                Check(
+                    !members.IsVisible
+                        && view.Conversation.Bounds.Right == view.Workspace.Bounds.Width,
+                    "В личном чате не должно оставаться места под панель участников."
+                );
+                Arrange(760, false, false);
+                Check(
+                    view.FindControl<Border>("DesktopHeader")!.IsVisible
+                        && !view.FindControl<Border>("BottomBar")!.IsVisible,
+                    "Граница адаптивности изменилась."
+                );
+            }
         );
     }
 
