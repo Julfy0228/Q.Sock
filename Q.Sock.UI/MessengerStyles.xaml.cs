@@ -44,6 +44,8 @@ public sealed partial class MessengerStyles : Styles
             ["link"] = Blend(Color.Parse(theme.Colors["accent"]), text, .28),
             ["linkHover"] = Blend(Color.Parse(theme.Colors["accent"]), text, .48),
             ["danger"] = Color.Parse("#D9534F"),
+            ["dangerHover"] = Color.Parse("#BF4140"),
+            ["dangerText"] = Color.Parse("#F8817C"),
         };
         if (theme.Colors["background"] == "#313338" && theme.Colors["surface"] == "#383A40")
         {
@@ -56,6 +58,34 @@ public sealed partial class MessengerStyles : Styles
         }
         foreach (var (key, value) in roles)
             target.Resources[key] = new SolidColorBrush(value);
+        var calendarColors = new Dictionary<string, string>
+        {
+            ["CalendarViewBackground"] = "panel",
+            ["CalendarViewForeground"] = "text",
+            ["CalendarViewBorderBrush"] = "separator",
+            ["CalendarViewNavigationButtonBackground"] = "surface",
+            ["CalendarViewNavigationButtonBorderBrush"] = "separator",
+            ["CalendarViewNavigationButtonBorderBrushPointerOver"] = "accent",
+            ["CalendarViewNavigationButtonForegroundPointerOver"] = "text",
+            ["CalendarViewNavigationButtonForegroundPressed"] = "text",
+            ["CalendarViewCalendarItemForeground"] = "text",
+            ["CalendarViewCalendarItemRevealBackground"] = "panel",
+            ["CalendarViewCalendarItemRevealBorderBrush"] = "panel",
+            ["CalendarViewOutOfScopeBackground"] = "panel",
+            ["CalendarViewOutOfScopeForeground"] = "muted",
+            ["CalendarViewBlackoutForeground"] = "muted",
+            ["CalendarViewWeekDayForegroundDisabled"] = "muted",
+            ["CalendarViewHoverBorderBrush"] = "accent",
+            ["CalendarViewPressedBorderBrush"] = "accentHover",
+            ["CalendarViewSelectedBorderBrush"] = "accent",
+            ["CalendarViewSelectedHoverBorderBrush"] = "accent",
+            ["CalendarViewSelectedPressedBorderBrush"] = "accentHover",
+            ["CalendarDatePickerCalendarGlyphForeground"] = "secondary",
+            ["CalendarDatePickerBackgroundPointerOver"] = "surface",
+            ["CalendarDatePickerBorderBrushPointerOver"] = "accent",
+        };
+        foreach (var (key, color) in calendarColors)
+            target.Resources[key] = target.Resources[color];
         foreach (
             var (legacy, modern) in new[]
             {

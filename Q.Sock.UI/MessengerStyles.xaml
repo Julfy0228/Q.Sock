@@ -45,6 +45,25 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="MinWidth" Value="0" />
     </Style>
+    <Style Selector="Calendar">
+        <Setter Property="Background" Value="{DynamicResource panel}" />
+        <Setter Property="Foreground" Value="{DynamicResource text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource separator}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontSize" Value="13" />
+    </Style>
+    <Style Selector="CalendarDayButton:today /template/ Border#Root">
+        <Setter Property="Background" Value="{DynamicResource selection}" />
+    </Style>
+    <Style Selector="CalendarItem /template/ Border#BackgroundLayer">
+        <Setter Property="Background" Value="{DynamicResource panel}" />
+    </Style>
+    <Style Selector="CalendarDayButton:selected /template/ Border#Root">
+        <Setter Property="Background" Value="{DynamicResource accent}" />
+    </Style>
+    <Style Selector="CalendarDayButton:selected /template/ ContentPresenter">
+        <Setter Property="Foreground" Value="White" />
+    </Style>
     <Style Selector="TimePicker">
         <Setter Property="Background" Value="{DynamicResource background}" />
         <Setter Property="Foreground" Value="{DynamicResource text}" />

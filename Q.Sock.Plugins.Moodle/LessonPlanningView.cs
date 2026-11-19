@@ -48,7 +48,12 @@ public sealed class LessonPlanningView : UserControl
     private readonly Button save;
     private readonly TextBox courseSearch = Input("Найти курс");
     private MoodleCourse[] courses = [];
-    private readonly Grid sections = new() { ColumnSpacing = 24, RowSpacing = 24 };
+    private readonly Grid sections = new()
+    {
+        ColumnDefinitions = new ColumnDefinitions("*,0"),
+        RowDefinitions = new RowDefinitions("Auto,Auto"),
+        RowSpacing = 24,
+    };
     private readonly StackPanel materialSection = new() { Spacing = 16 };
     private readonly TextBlock materialPage = Text("Материалов пока нет", 11, "muted");
     private readonly TextBlock materialName = Text("Материалы занятия", 16, strong: true);
@@ -161,14 +166,16 @@ public sealed class LessonPlanningView : UserControl
         );
         sections.Children.Add(parameters);
         sections.Children.Add(materialSection);
+        Grid.SetRow(materialSection, 1);
         var footer = Column(save, Text("Изменения появятся в курсе и чате", 11, "muted"), result);
         footer.Margin = new Thickness(0, 12, 0, 0);
         Content = Column(sections, footer);
         SizeChanged += (_, _) =>
         {
             var wide = Bounds.Width >= 700;
-            sections.ColumnDefinitions = new ColumnDefinitions(wide ? "*,*" : "*");
-            sections.RowDefinitions = new RowDefinitions(wide ? "Auto" : "Auto,Auto");
+            sections.ColumnDefinitions[1].Width = wide ? GridLength.Star : new GridLength(0);
+            sections.ColumnSpacing = wide ? 24 : 0;
+            sections.RowSpacing = wide ? 0 : 24;
             Grid.SetColumn(materialSection, wide ? 1 : 0);
             Grid.SetRow(materialSection, wide ? 0 : 1);
         };
