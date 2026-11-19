@@ -381,7 +381,7 @@ public sealed partial class MessengerView
     private void BuildProfileNavigation()
     {
         navigation.Children.Add(
-            IconButton("HelpOutline", "Справка Q.Sock", ShowDocumentation)
+            IconButton("HelpOutlined", "Справка Q.Sock", ShowDocumentation)
         );
         navigation.Children.Add(
             Card(

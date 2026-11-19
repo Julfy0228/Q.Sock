@@ -56,6 +56,7 @@ public sealed partial class MessengerView
         catch (Exception exception)
             when (exception
                     is HttpRequestException
+                        or System.Net.WebException
                         or OperationCanceledException
                         or ArgumentException
             )
