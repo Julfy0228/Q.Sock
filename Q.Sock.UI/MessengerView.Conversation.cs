@@ -279,98 +279,89 @@ public sealed partial class MessengerView
         {
             ColumnDefinitions = new ColumnDefinitions("32,*"),
             ColumnSpacing = 10,
+            Background = Brushes.Transparent,
         };
-        grid.Children.Add(Avatar(message.SenderName, message.SenderId, AvatarKind.User, 32));
-        var heading = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("*,32"),
-            ColumnSpacing = 4,
-        };
+        var avatar = Avatar(message.SenderName, message.SenderId, AvatarKind.User, 32);
+        avatar.VerticalAlignment = VerticalAlignment.Top;
+        grid.Children.Add(avatar);
         var name = Ellipsis(message.SenderName, 12, "secondary", true);
         var time = Text(
-            DateTime
-                .SpecifyKind(message.SentAtUtc, DateTimeKind.Utc)
-                .ToLocalTime()
-                .ToString("HH:mm"),
+            DateTime.SpecifyKind(message.SentAtUtc, DateTimeKind.Utc).ToLocalTime().ToString("HH:mm"),
             11,
             "muted"
         );
-        var labels = new WrapPanel
-        {
-            ItemSpacing = 10,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+        var labels = new WrapPanel { ItemSpacing = 10 };
         labels.Children.Add(name);
         labels.Children.Add(time);
         if (message.EditedAtUtc is not null)
             labels.Children.Add(Text("изменено", 11, "muted"));
         if (own && message.ReadCount > 0)
             labels.Children.Add(new MaterialIcon("DoneAll", 14));
-        heading.Children.Add(labels);
-        var menu = MessageMenu(message);
-        if (menu.Items.Count > 0)
-        {
-            var options = IconButton(
-                "MoreHoriz",
-                "Действия с сообщением",
-                () => Task.CompletedTask,
-                compact: true
-            );
-            options.Width = 32;
-            options.Height = options.MinHeight = 28;
-            options.ContextMenu = menu;
-            options.Click += (_, _) => menu.Open(options);
-            Grid.SetColumn(options, 1);
-            heading.Children.Add(options);
-        }
-        var body = Column(heading, new MarkdownView(message.Text));
-        body.Spacing = 3;
+
+        var body = Column(labels);
+        body.Spacing = 5;
+        body.VerticalAlignment = VerticalAlignment.Top;
+        if (!string.IsNullOrWhiteSpace(message.Text))
+            body.Children.Add(new MarkdownView(message.Text));
         foreach (var file in message.Attachments)
-        {
-            var current = file;
-            var fileContent = new Grid
-            {
-                ColumnDefinitions = new ColumnDefinitions("32,*"),
-                ColumnSpacing = 12,
-            };
-            fileContent.Children.Add(
-                new MaterialIcon("InsertDriveFileOutlined", 28)
-                {
-                    VerticalAlignment = VerticalAlignment.Center,
-                }
-            );
-            var description = Column(
-                Text(file.Name, 14, strong: true),
-                Text($"{Math.Ceiling(file.Size / 1024d)} КБ · скачать файл", 12, "muted")
-            );
-            description.Spacing = 4;
-            Grid.SetColumn(description, 1);
-            fileContent.Children.Add(description);
-            var download = Button(file.Name, () => Run(() => SaveFile(current)));
-            download.Content = fileContent;
-            download.Classes.Add("quiet");
-            download.HorizontalAlignment = HorizontalAlignment.Stretch;
-            download.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-            body.Children.Add(Surface(download, "panel", new Thickness(4), 10));
-            if (
-                Path.GetExtension(file.Name)
-                is ".cs"
-                    or ".js"
-                    or ".ts"
-                    or ".py"
-                    or ".php"
-                    or ".json"
-                    or ".txt"
-            )
-                body.Children.Add(
-                    IconButton("Code", "Просмотреть код", () => Run(() => PreviewCode(current)))
-                );
-        }
+            body.Children.Add(FileAttachment(file));
         Grid.SetColumn(body, 1);
         grid.Children.Add(body);
-        grid.ContextMenu = menu;
+
+        var menu = MessageMenu(message);
+        if (menu.Items.Count > 0)
+            AttachContextMenu(grid, menu);
         return grid;
     }
+
+    private Control FileAttachment(FileInfoDto file)
+    {
+        var preview = file.Size <= 1024 * 1024
+            && Path.GetExtension(file.Name).ToLowerInvariant() is ".cs" or ".js" or ".ts" or ".py" or ".php" or ".json" or ".txt";
+        var badge = Surface(
+            new MaterialIcon(preview ? "Code" : "InsertDriveFileOutlined", 20),
+            "accent", radius: 17
+        );
+        badge.Width = badge.Height = 34;
+        badge.VerticalAlignment = VerticalAlignment.Center;
+        badge.Child!.HorizontalAlignment = HorizontalAlignment.Center;
+        badge.Child.VerticalAlignment = VerticalAlignment.Center;
+        var description = Column(Ellipsis(file.Name, 14, strong: true), Text(FileSize(file.Size), 12, "muted"));
+        description.Spacing = 2;
+        description.VerticalAlignment = VerticalAlignment.Center;
+        var main = Button(file.Name, () => Run(() => preview ? PreviewCode(file) : SaveFile(file)));
+        main.Classes.Add("quiet");
+        main.Padding = new Thickness(8, 6);
+        main.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+        ToolTip.SetTip(main, preview ? "Открыть предпросмотр" : "Скачать файл");
+
+        var content = new Grid { ColumnDefinitions = new ColumnDefinitions("34,*"), ColumnSpacing = 10 };
+        content.Children.Add(badge);
+        Grid.SetColumn(description, 1);
+        content.Children.Add(description);
+        main.Content = content;
+
+        var card = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), MaxWidth = 440 };
+        card.HorizontalAlignment = HorizontalAlignment.Left;
+        card.Children.Add(main);
+        if (preview)
+        {
+            var download = IconButton("Download", $"Скачать {file.Name}", () => Run(() => SaveFile(file)), compact: true);
+            download.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(download, 1);
+            card.Children.Add(download);
+        }
+        var surface = Surface(card, "panel", radius: 10);
+        surface.HorizontalAlignment = HorizontalAlignment.Left;
+        return surface;
+    }
+
+    private static string FileSize(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes} Б",
+        < 1024 * 1024 => $"{bytes / 1024d:0.#} КБ",
+        _ => $"{bytes / (1024d * 1024):0.#} МБ",
+    };
 
     private ContextMenu MessageMenu(ChatMessage message)
     {
@@ -384,6 +375,7 @@ public sealed partial class MessengerView
         if (message.SenderId == profile?.Id || selectedChat?.CanManage == true)
         {
             var delete = new MenuItem { Header = "Удалить" };
+            delete.Classes.Add("danger");
             delete.Click += async (_, _) =>
                 await Run(async () =>
                 {
