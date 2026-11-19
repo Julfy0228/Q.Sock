@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/Client/">
     <Project Path="Q.Sock.Client/Q.Sock.Client.csproj" />
+    <Project Path="Q.Sock.Android/Q.Sock.Android.csproj" />
     <Project Path="Q.Sock.Browser/Q.Sock.Browser.csproj" />
     <Project Path="Q.Sock.UI/Q.Sock.UI.csproj" />
     <Project Path="Q.Sock.PluginContracts/Q.Sock.PluginContracts.csproj" />
