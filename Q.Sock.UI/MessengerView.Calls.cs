@@ -35,6 +35,7 @@ public sealed partial class MessengerView
             client,
             message => Dispatcher.UIThread.Post(() => notice.Text = message)
         );
+        session.ApplyTheme(currentTheme);
         activeCall = session;
         activeCallId = callId;
         var state = Text("Подключение…", 12, "muted");
@@ -93,7 +94,11 @@ public sealed partial class MessengerView
         heading.Children.Add(back);
         var layout = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto") };
         layout.Children.Add(Surface(heading, "panel"));
-        callContent = new Grid { ColumnSpacing = 20, Margin = new Thickness(20, 16) };
+        callContent = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("*,0"),
+            Margin = new Thickness(20, 16),
+        };
         callContent.Children.Add(Surface(session.View, "popup", new Thickness(8), 12));
         callDiscussionChat = callChat?.GuildId is { } guild
             ? chats.FirstOrDefault(chat => chat.GuildId == guild && chat.Type == "channel")?.Id
@@ -201,7 +206,8 @@ public sealed partial class MessengerView
         if (callContent is null || callChatPanel is null)
             return;
         var wide = Bounds.Width >= 1100;
-        callContent.ColumnDefinitions = new ColumnDefinitions(wide ? "*,320" : "*");
+        callContent.ColumnDefinitions[1].Width = new GridLength(wide ? 320 : 0);
+        callContent.ColumnSpacing = wide ? 20 : 0;
         callChatPanel.IsVisible = wide;
         callContent.Margin = new Thickness(Bounds.Width < 760 ? 12 : 20, 16);
     }
@@ -259,17 +265,18 @@ public sealed partial class MessengerView
     private async Task LeaveCall()
     {
         var session = activeCall;
+        var overlay = callOverlay;
         activeCall = null;
         activeCallId = null;
-        if (session is not null)
-            await session.DisposeAsync();
-        if (callOverlay is not null)
-            root.Children.Remove(callOverlay);
         callOverlay = null;
         callContent = null;
         callChatPanel = null;
         callDiscussion = null;
         callDiscussionChat = null;
+        if (overlay is not null)
+            root.Children.Remove(overlay);
+        if (session is not null)
+            await session.DisposeAsync();
     }
 
     private async Task ShowCallMembers(CallInfo call)

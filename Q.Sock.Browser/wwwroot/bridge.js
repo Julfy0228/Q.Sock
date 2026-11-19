@@ -31,18 +31,18 @@ function render(session, state) {
     let tile = session.tiles.get(item.id);
     if (!tile) {
       const element = document.createElement('section');
-      element.style.cssText = 'position:relative;background:#2b2d31;border-radius:12px;overflow:hidden;min-height:160px;display:flex;align-items:center;justify-content:center;';
+      element.className = 'call-tile';
       const video = document.createElement('video');
       video.autoplay = true;
       video.playsInline = true;
       video.controls = false;
       video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;';
       const label = document.createElement('span');
-      label.style.cssText = 'position:absolute;bottom:10px;left:12px;color:#b5bac1;background:#232428cc;padding:6px 10px;border-radius:6px;font:12px Inter,system-ui;';
+      label.className = 'call-tile-label';
       const avatar = document.createElement('div');
       avatar.style.cssText = 'width:64px;height:64px;border-radius:50%;background:#007acc;color:white;display:grid;place-items:center;font:600 24px Inter,system-ui;';
       element.append(avatar, video, label);
-      session.host.append(element);
+      session.grid.append(element);
       tile = { element, video, label, avatar };
       session.tiles.set(item.id, tile);
     }
@@ -76,7 +76,9 @@ function render(session, state) {
 export const media = {
   createHost(id) {
     const host = document.createElement('div');
-    host.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;overflow:auto;align-content:start;width:100%;height:100%;background:#1e1f22;padding:8px;box-sizing:border-box;';
+    const grid = document.createElement('div');
+    grid.className = 'call-media';
+    host.append(grid);
     const events = new Map();
     const hub = {
       connectionId: '',
@@ -84,10 +86,19 @@ export const media = {
       on: (name, callback) => events.set(name, callback),
       off: (name) => events.delete(name),
     };
-    const session = { id, host, hub, events, names: {}, tiles: new Map() };
+    const session = { id, grid, hub, events, names: {}, tiles: new Map() };
     session.engine = new VoiceSession(hub, (state) => render(session, state), (message) => managed.Notice(id, message));
     sessions.set(id, session);
     return host;
+  },
+
+  setTheme(id, background, panel, muted, text) {
+    const grid = sessions.get(id)?.grid;
+    if (!grid) return;
+    grid.style.setProperty('--call-background', background);
+    grid.style.setProperty('--call-panel', panel);
+    grid.style.setProperty('--call-muted', muted);
+    grid.style.setProperty('--call-text', text);
   },
 
   async command(id, command, json) {
@@ -105,9 +116,11 @@ export const media = {
     else if (command === 'share') await session.engine.share();
     else if (command === 'leave') await session.engine.leave();
     else if (command === 'dispose') {
-      await session.engine.dispose();
-      session.host.remove();
-      sessions.delete(id);
+      try {
+        await session.engine.dispose();
+      } finally {
+        sessions.delete(id);
+      }
     } else throw Error('Неизвестная команда медиамоста.');
   },
 

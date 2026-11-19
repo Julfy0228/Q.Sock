@@ -431,6 +431,7 @@ public sealed partial class MessengerView
     {
         Background = Brush.Parse(currentTheme.Colors["background"]);
         MessengerStyles.ApplyPalette(this, currentTheme);
+        activeCall?.ApplyTheme(currentTheme);
     }
 
     private async Task ExportTheme(bool qr)

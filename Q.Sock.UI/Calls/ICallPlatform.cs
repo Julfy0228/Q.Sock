@@ -13,6 +13,7 @@ public interface ICallSession : IAsyncDisposable
 {
     Control View { get; }
     event Action<CallMediaState>? Changed;
+    void ApplyTheme(MessengerTheme theme);
     Task Join(CallInfo call);
     Task ToggleMicrophone();
     Task ToggleCamera();

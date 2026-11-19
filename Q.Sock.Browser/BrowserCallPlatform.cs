@@ -23,6 +23,7 @@ internal sealed class BrowserCallSession : ICallSession
     private readonly List<IDisposable> subscriptions = [];
     private readonly string id = Guid.NewGuid().ToString("N");
     private readonly TaskCompletionSource ready = new();
+    private MessengerTheme theme = new();
     private bool disposed;
 
     public Control View { get; }
@@ -32,7 +33,11 @@ internal sealed class BrowserCallSession : ICallSession
     {
         this.client = client;
         this.notice = notice;
-        View = new BrowserVideoHost(id, () => ready.TrySetResult());
+        View = new BrowserVideoHost(id, () =>
+        {
+            UpdateTheme();
+            ready.TrySetResult();
+        });
         BrowserMediaExports.Sessions.Add(id, this);
         foreach (var eventName in new[] { "RtcSignal", "PeerLeft", "CallEnded", "CallModerated" })
         {
@@ -93,6 +98,22 @@ internal sealed class BrowserCallSession : ICallSession
     public Task ToggleCamera() => BrowserMedia.Command(id, "camera", "{}");
 
     public Task ToggleScreen() => BrowserMedia.Command(id, "share", "{}");
+
+    public void ApplyTheme(MessengerTheme theme)
+    {
+        this.theme = theme;
+        if (!disposed && ready.Task.IsCompletedSuccessfully)
+            UpdateTheme();
+    }
+
+    private void UpdateTheme() =>
+        BrowserMedia.SetTheme(
+            id,
+            theme.Colors["background"],
+            theme.Colors["panel"],
+            theme.Colors["muted"],
+            theme.Colors["text"]
+        );
 
     internal void Update(string json) =>
         Changed?.Invoke(
@@ -166,6 +187,9 @@ internal static partial class BrowserMedia
 
     [JSImport("media.command", "qsock")]
     public static partial Task Command(string id, string command, string data);
+
+    [JSImport("media.setTheme", "qsock")]
+    public static partial void SetTheme(string id, string background, string panel, string muted, string text);
 
     [JSImport("media.receive", "qsock")]
     public static partial void Receive(string id, string name, string data);
