@@ -453,6 +453,9 @@ public sealed partial class MessengerView : UserControl
     private async Task SelectChat(ChatInfo chat)
     {
         selectedChat = chat;
+        membersOpen = null;
+        conversationMembers = [];
+        memberList.Children.Clear();
         selectedGuild = chat.GuildId;
         navigationSection = chat.GuildId is null ? "Чаты" : "Пространства";
         messageSearch = "";

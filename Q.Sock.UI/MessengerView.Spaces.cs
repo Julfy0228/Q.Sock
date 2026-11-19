@@ -99,97 +99,45 @@ public sealed partial class MessengerView
         var owner =
             ownRole.ValueKind != JsonValueKind.Undefined
             && ownRole.GetProperty("role").GetString() == "owner";
+        var source = client!;
         foreach (var member in members)
         {
             var id = member.GetProperty("userId").GetGuid();
             var role = member.GetProperty("role").GetString() ?? "member";
             var name = member.GetProperty("displayName").GetString();
-            var item = Column(
-                Text(
-                    string.IsNullOrWhiteSpace(name)
-                        ? member.GetProperty("userName").GetString()!
-                        : name
-                ),
-                Text(RoleLabel(role), 12)
-            );
+            if (string.IsNullOrWhiteSpace(name))
+                name = member.GetProperty("userName").GetString() ?? "Участник";
+            var actions = new ContextMenu();
             if (id != profile?.Id)
-                item.Children.Add(
-                    Button(
-                        "Написать",
-                        () =>
-                            Run(async () =>
-                            {
-                                var direct = await client.Post<JsonElement>(
-                                    "api/chats",
-                                    new CreateChat { Type = "direct", UserIds = [id] }
-                                );
-                                selectedGuild = null;
-                                await RefreshWorkspace();
-                                await SelectChat(
-                                    chats.Single(chat =>
-                                        chat.Id == direct.GetProperty("id").GetGuid()
-                                    )
-                                );
-                                CloseDialog();
-                            })
-                    )
-                );
-            if (
-                !guild.Managed
-                && (owner || profile?.IsAdmin == true)
-                && role != "owner"
-                && id != profile?.Id
-            )
+                AddMemberAction(actions, "Написать", () => WriteToMember(source, id));
+            var canManage = !guild.Managed && (owner || profile?.IsAdmin == true)
+                && role != "owner" && id != profile?.Id;
+            Func<string, Task>? changeRole = null;
+            if (canManage)
             {
-                var roles = new[]
+                AddMemberAction(actions, "Исключить из пространства", async () =>
                 {
-                    new Choice("member", "Участник"),
-                    new Choice("moderator", "Модератор"),
-                };
-                var selection = new ComboBox
-                {
-                    ItemsSource = roles,
-                    SelectedItem = roles.First(choice => choice.Value == role),
-                };
-                item.Children.Add(selection);
-                item.Children.Add(
-                    Button(
-                        "Сохранить роль",
-                        () =>
-                            Run(async () =>
-                            {
-                                await client.Mutate(
-                                    $"api/guilds/{guild.Id}/members/{id}",
-                                    HttpMethod.Put,
-                                    new MemberUpdate
-                                    {
-                                        Role = ((Choice)selection.SelectedItem!).Value,
-                                    }
-                                );
-                                await ShowSpace();
-                            })
-                    )
-                );
-                item.Children.Add(
-                    Button(
-                        "Исключить",
-                        () =>
-                            Run(async () =>
-                            {
-                                await client.Mutate(
-                                    $"api/guilds/{guild.Id}/members/{id}",
-                                    HttpMethod.Delete
-                                );
-                                await ShowSpace();
-                            })
-                    )
-                );
+                    await source.Mutate($"api/guilds/{guild.Id}/members/{id}", HttpMethod.Delete);
+                    if (client == source && selectedGuild == guild.Id)
+                        await ShowSpace();
+                }, destructive: true);
+                if (role is "member" or "moderator")
+                    changeRole = async value =>
+                    {
+                        await source.Mutate(
+                            $"api/guilds/{guild.Id}/members/{id}",
+                            HttpMethod.Put,
+                            new MemberUpdate { Role = value }
+                        );
+                        if (client == source && selectedGuild == guild.Id)
+                            await ShowSpace();
+                    };
             }
-            list.Children.Add(Card(item));
+            list.Children.Add(MemberRow(name, id, role, [], actions, changeRole));
         }
         if (!guild.Managed && (owner || profile?.IsAdmin == true))
             list.Children.Add(
-                Button(
+                Danger(
                     "Удалить пространство…",
                     () =>
                         ShowDialog(
@@ -198,8 +146,8 @@ public sealed partial class MessengerView
                                 Text(
                                     $"Удалить пространство «{guild.Name}» вместе с его каналами и перепиской?"
                                 ),
-                                Button(
-                                    "Подтвердить",
+                                Danger(
+                                    "Удалить",
                                     () =>
                                         Run(async () =>
                                         {

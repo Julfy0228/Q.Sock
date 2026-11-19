@@ -43,7 +43,7 @@
                 <DataTemplate x:DataType="vm:AccountSettingsItem">
                     <StackPanel Spacing="12">
                         <Button Content="{Binding Label}" Command="{Binding SwitchCommand}" />
-                        <Button Content="Убрать из сохранённых" Command="{Binding RemoveCommand}" />
+                        <Button Content="Убрать из сохранённых" Classes="danger" Command="{Binding RemoveCommand}" />
                     </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
@@ -78,7 +78,7 @@
                         <StackPanel Spacing="12">
                             <TextBlock Text="{Binding DeviceName}" />
                             <TextBlock Text="{Binding Activity}" FontSize="11" LineHeight="15.4" />
-                            <Button Content="Завершить сессию" Command="{Binding RevokeCommand}" />
+                            <Button Content="Завершить сессию" Classes="danger" Command="{Binding RevokeCommand}" />
                         </StackPanel>
                     </Border>
                 </DataTemplate>

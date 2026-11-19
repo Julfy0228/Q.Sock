@@ -19,16 +19,25 @@ public sealed partial class MessengerView
             "",
             async name =>
             {
-                var result = await client!.Post<JsonElement>("api/guilds", new { name });
-                selectedGuild = result.GetProperty("id").GetGuid();
-                await RefreshWorkspace();
+                var source = client!;
+                var result = await source.Post<JsonElement>("api/guilds", new { name });
+                var id = result.GetProperty("id").GetGuid();
+                var updatedGuilds = await source.Get<GuildInfo[]>("api/guilds");
+                var updatedChats = await source.Get<ChatInfo[]>("api/chats");
+                if (client == source && updatedGuilds.FirstOrDefault(guild => guild.Id == id) is { } guild)
+                {
+                    guilds = updatedGuilds;
+                    chats = updatedChats;
+                    await NavigateToGuild(guild);
+                }
             }
         );
 
     private async Task CreateChat()
     {
+        var guildId = selectedGuild;
         var name = Input("Название");
-        var types = selectedGuild is null
+        var types = guildId is null
             ? new[] { new Choice("direct", "Личный чат"), new Choice("group", "Групповой чат") }
             : new[]
             {
@@ -67,7 +76,7 @@ public sealed partial class MessengerView
                 })
         );
         var form = Column(type, name);
-        if (selectedGuild is null)
+        if (guildId is null)
         {
             form.Children.Add(search);
             form.Children.Add(find);
@@ -85,7 +94,7 @@ public sealed partial class MessengerView
                             {
                                 Type = (type.SelectedItem as Choice)?.Value ?? "group",
                                 Name = name.Text ?? "",
-                                GuildId = selectedGuild,
+                                GuildId = guildId,
                                 UserIds = selected.ToArray(),
                             }
                         );
@@ -97,7 +106,7 @@ public sealed partial class MessengerView
                     })
             )
         );
-        await ShowDialog("Новый чат или канал", form);
+        await ShowDialog(guildId is null ? "Новый чат" : "Новый канал", form);
     }
 
     private async Task ShowContacts()
@@ -206,190 +215,94 @@ public sealed partial class MessengerView
         await ShowDialog("Люди и друзья", Column(search, find, results));
     }
 
-    private async Task ShowMembers()
-    {
-        if (selectedChat is null || client is null)
-            return;
-        var members = await client.Get<MemberInfo[]>($"api/chats/{selectedChat.Id}/members");
-        var list = new StackPanel { Spacing = 10 };
-        if (
-            selectedChat.CanManage
-            && !selectedChat.Managed
-            && selectedChat.GuildId is null
-            && selectedChat.Type == "group"
-        )
-            list.Children.Add(
-                Button(
-                    "Добавить участника",
-                    () =>
-                        Run(() =>
-                            PickUser(async person =>
-                            {
-                                await client.Mutate(
-                                    $"api/chats/{selectedChat.Id}/members/{person.Id}",
-                                    HttpMethod.Put,
-                                    new MemberUpdate()
-                                );
-                                await ShowMembers();
-                            })
-                        )
-                )
-            );
-        foreach (var member in members)
-        {
-            var item = Column(
-                Text(member.DisplayName == "" ? member.UserName : member.DisplayName),
-                Text($"{RoleLabel(member.Role)} · {string.Join(", ", member.Groups)}", 11)
-            );
-            if (
-                selectedChat.Type != "direct"
-                && selectedChat.CanManage
-                && member.UserId != profile?.Id
-                && member.Role != "owner"
-            )
-            {
-                var roles = new[]
-                {
-                    new Choice("member", "Участник"),
-                    new Choice("moderator", "Модератор"),
-                };
-                var role = new ComboBox
-                {
-                    ItemsSource = roles,
-                    SelectedItem =
-                        roles.FirstOrDefault(item => item.Value == member.Role) ?? roles[0],
-                };
-                if (!selectedChat.Managed)
-                    item.Children.Add(role);
-                var write = new CheckBox { Content = "Сообщения", IsChecked = member.CanWrite };
-                var speak = new CheckBox { Content = "Голос", IsChecked = member.CanSpeak };
-                var connect = new CheckBox
-                {
-                    Content = "Подключение",
-                    IsChecked = member.CanConnect,
-                };
-                var share = new CheckBox
-                {
-                    Content = "Демонстрация экрана",
-                    IsChecked = member.CanShare,
-                };
-                item.Children.Add(Column(write, speak, connect, share));
-                item.Children.Add(
-                    Button(
-                        "Применить ограничения",
-                        () =>
-                            Run(async () =>
-                            {
-                                await client.Mutate(
-                                    $"api/chats/{selectedChat.Id}/members/{member.UserId}",
-                                    HttpMethod.Put,
-                                    new MemberUpdate
-                                    {
-                                        Role = selectedChat.Managed
-                                            ? member.Role
-                                            : (role.SelectedItem as Choice)?.Value ?? "member",
-                                        CanWrite = write.IsChecked == true,
-                                        CanSpeak = speak.IsChecked == true,
-                                        CanConnect = connect.IsChecked == true,
-                                        CanShare = share.IsChecked == true,
-                                    }
-                                );
-                                await ShowMembers();
-                            })
-                    )
-                );
-                if (!selectedChat.Managed && selectedChat.GuildId is null)
-                    item.Children.Add(
-                        Button(
-                            "Исключить из чата",
-                            () =>
-                                Run(async () =>
-                                {
-                                    await client.Mutate(
-                                        $"api/chats/{selectedChat.Id}/members/{member.UserId}",
-                                        HttpMethod.Delete
-                                    );
-                                    await ShowMembers();
-                                })
-                        )
-                    );
-            }
-            list.Children.Add(Card(item));
-        }
-        await ShowDialog("Участники", list);
-    }
-
     private async Task StartCall()
     {
-        if (selectedChat is null || client is null)
+        if (selectedChat is not { } chat || client is not { } source)
             return;
-        if (selectedChat.Type is "direct" or "room")
+        if (chat.Type is "direct" or "room")
         {
-            var call = await client.Post<CallInfo>(
+            var call = await source.Post<CallInfo>(
                 "api/calls",
-                new CallRequest
-                {
-                    ChatId = selectedChat.Id,
-                    RingAll = selectedChat.Type == "direct",
-                }
+                new CallRequest { ChatId = chat.Id, RingAll = chat.Type == "direct" }
             );
-            await OpenCall(call.Id);
+            if (client == source)
+                await OpenCall(call.Id);
             return;
         }
-        var members = await client.Get<MemberInfo[]>($"api/chats/{selectedChat.Id}/members");
-        var ringAll = new CheckBox
+
+        var members = await source.Get<MemberInfo[]>($"api/chats/{chat.Id}/members");
+        var calls = await source.Get<CallInfo[]>("api/calls");
+        if (client != source || selectedChat?.Id != chat.Id)
+            return;
+
+        var everyone = new CheckBox { Content = "Все", IsChecked = true };
+        var choices = members
+            .Where(member => member.UserId != profile?.Id && member.CanConnect)
+            .OrderBy(MemberName)
+            .Select(member =>
+            {
+                var check = new CheckBox
+                {
+                    Content = PersonIdentity(MemberName(member), member.UserId),
+                    IsChecked = true,
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                };
+                Avalonia.Automation.AutomationProperties.SetName(check, MemberName(member));
+                return (member.UserId, Check: check);
+            })
+            .ToArray();
+        var synchronizing = false;
+        everyone.IsEnabled = choices.Length > 0;
+        everyone.IsChecked = choices.Length > 0;
+        everyone.IsCheckedChanged += (_, _) =>
         {
-            Content = "Позвонить всем, кроме отмеченных",
-            IsChecked = true,
+            if (synchronizing)
+                return;
+            synchronizing = true;
+            foreach (var (_, choice) in choices)
+                choice.IsChecked = everyone.IsChecked == true;
+            synchronizing = false;
         };
-        var selected = new HashSet<Guid>();
-        var form = Column(
-            ringAll,
-            Text("Отключите переключатель, чтобы позвонить только отмеченным.", 12)
-        );
-        foreach (var member in members.Where(member => member.UserId != profile?.Id))
+        var form = Column(everyone);
+        foreach (var (_, choice) in choices)
         {
-            var check = new CheckBox
+            choice.IsCheckedChanged += (_, _) =>
             {
-                Content = member.DisplayName == "" ? member.UserName : member.DisplayName,
+                if (synchronizing)
+                    return;
+                synchronizing = true;
+                var count = choices.Count(item => item.Check.IsChecked == true);
+                everyone.IsChecked = count == 0 ? false : count == choices.Length ? true : null;
+                synchronizing = false;
             };
-            check.IsCheckedChanged += (_, _) =>
-            {
-                if (check.IsChecked == true)
-                    selected.Add(member.UserId);
-                else
-                    selected.Remove(member.UserId);
-            };
-            form.Children.Add(check);
+            form.Children.Add(choice);
         }
         form.Children.Add(
-            Button(
-                "Начать звонок",
-                () =>
-                    Run(async () =>
+            Primary("Начать звонок", () => Run(async () =>
+            {
+                if (client != source || selectedChat?.Id != chat.Id)
+                    return;
+                var call = await source.Post<CallInfo>(
+                    "api/calls",
+                    new CallRequest
                     {
-                        var call = await client.Post<CallInfo>(
-                            "api/calls",
-                            new CallRequest
-                            {
-                                ChatId = selectedChat.Id,
-                                RingAll = ringAll.IsChecked == true,
-                                RingUserIds = ringAll.IsChecked == true ? [] : selected.ToArray(),
-                                ExcludedUserIds =
-                                    ringAll.IsChecked == true ? selected.ToArray() : [],
-                            }
-                        );
-                        await OpenCall(call.Id);
-                        CloseDialog();
-                    })
-            )
+                        ChatId = chat.Id,
+                        RingAll = false,
+                        RingUserIds = choices
+                            .Where(item => item.Check.IsChecked == true)
+                            .Select(item => item.UserId)
+                            .ToArray(),
+                    }
+                );
+                CloseDialog();
+                await OpenCall(call.Id);
+            }))
         );
-        var calls = await client.Get<CallInfo[]>("api/calls");
-        foreach (var call in calls.Where(call => call.ChatId == selectedChat.Id))
+        foreach (var call in calls.Where(call => call.ChatId == chat.Id))
             form.Children.Add(
                 Button($"Присоединиться: {call.Title}", () => Run(() => OpenCall(call.Id)))
             );
-        await ShowDialog("Звонок", form);
+        await ShowDialog("Кому позвонить", form);
     }
 
     private async Task OpenCall(Guid callId)

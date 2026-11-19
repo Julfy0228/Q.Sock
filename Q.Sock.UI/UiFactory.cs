@@ -44,6 +44,13 @@ public static class UiFactory
         return button;
     }
 
+    public static Button Danger(string label, Func<Task> action)
+    {
+        var button = Button(label, action);
+        button.Classes.Add("danger");
+        return button;
+    }
+
     public static Button IconButton(
         string icon,
         string label,
@@ -64,10 +71,17 @@ public static class UiFactory
 
     public static Border Avatar(string name, double size = 42, bool accent = true)
     {
+        var avatar = AvatarFrame(name, size);
+        avatar.Bind(Border.BackgroundProperty, new DynamicResourceExtension(accent ? "accent" : "selection"));
+        return avatar;
+    }
+
+    private static Border AvatarFrame(string name, double size)
+    {
         var initial = string.IsNullOrWhiteSpace(name)
             ? "?"
             : System.Globalization.StringInfo.GetNextTextElement(name.Trim()).ToUpperInvariant();
-        var avatar = new Border
+        return new Border
         {
             Width = size,
             Height = size,
@@ -83,16 +97,11 @@ public static class UiFactory
                 VerticalAlignment = VerticalAlignment.Center,
             },
         };
-        avatar.Bind(
-            Border.BackgroundProperty,
-            new DynamicResourceExtension(accent ? "accent" : "selection")
-        );
-        return avatar;
     }
 
     public static Border Avatar(string name, Guid id, Q.Sock.Core.AvatarKind kind, double size = 42)
     {
-        var avatar = Avatar(name, size);
+        var avatar = AvatarFrame(name, size);
         avatar.Background = new SolidColorBrush(
             Color.Parse(Q.Sock.Core.AvatarColors.For(id, kind))
         );

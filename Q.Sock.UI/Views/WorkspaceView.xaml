@@ -6,29 +6,8 @@
     Design.Height="820"
     Background="{DynamicResource background}"
 >
-    <Grid x:Name="ShellGrid" RowDefinitions="72,*,Auto">
-        <Border x:Name="DesktopHeader" Background="{DynamicResource panel}">
-            <Grid ColumnDefinitions="*,Auto" Margin="16,10">
-                <StackPanel Spacing="2">
-                    <TextBlock
-                        Text="Мессенджер"
-                        FontSize="18"
-                        LineHeight="25.2"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource text}"
-                    />
-                    <TextBlock
-                        x:Name="IdentityText"
-                        FontSize="11"
-                        LineHeight="15.4"
-                        Foreground="{DynamicResource muted}"
-                        TextWrapping="Wrap"
-                    />
-                </StackPanel>
-                <ContentControl x:Name="DesktopActionsHost" Grid.Column="1" />
-            </Grid>
-        </Border>
-        <Grid x:Name="WorkspaceGrid" Grid.Row="1" ColumnDefinitions="72,280,*,0">
+    <Grid RowDefinitions="*,Auto">
+        <Grid x:Name="WorkspaceGrid" ColumnDefinitions="72,280,*,0">
             <Border x:Name="RailPanel" Background="{DynamicResource chrome}">
                 <ScrollViewer>
                     <StackPanel x:Name="RailItemsPanel" Spacing="16" Margin="12,14" />
@@ -36,50 +15,42 @@
             </Border>
             <Border x:Name="SidebarPanel" Grid.Column="1" Background="{DynamicResource panel}">
                 <Grid RowDefinitions="Auto,Auto,*">
-                    <Grid ColumnDefinitions="*,Auto" Margin="16">
-                        <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6" Margin="12,12,12,4">
+                        <StackPanel Spacing="8" VerticalAlignment="Center">
                             <TextBlock
                                 x:Name="SidebarTitleText"
-                                Text="Чаты"
+                                IsVisible="False"
                                 FontSize="18"
-                                LineHeight="25.2"
                                 FontWeight="SemiBold"
                                 TextWrapping="Wrap"
                                 Foreground="{DynamicResource text}"
                             />
-                            <TextBlock
-                                x:Name="StatusText"
-                                Text="Q.Sock"
-                                FontSize="11"
-                                LineHeight="16.8"
-                                TextWrapping="Wrap"
-                                Foreground="{DynamicResource muted}"
-                            />
+                            <Border
+                                x:Name="SearchSurface"
+                                Padding="8,0"
+                                CornerRadius="8"
+                                Background="{DynamicResource surface}"
+                            >
+                                <Grid ColumnDefinitions="32,*">
+                                    <ContentControl
+                                        x:Name="SearchIconHost"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                    />
+                                    <TextBox
+                                        x:Name="SearchInput"
+                                        Grid.Column="1"
+                                        Classes="search"
+                                        PlaceholderText="Поиск людей и сообщений"
+                                    />
+                                </Grid>
+                            </Border>
                         </StackPanel>
-                        <ContentControl x:Name="SidebarActionsHost" Grid.Column="1" />
+                        <ContentControl x:Name="SidebarActionsHost" Grid.Column="1" VerticalAlignment="Top" />
                     </Grid>
-                    <Border
-                        x:Name="SearchSurface"
-                        Grid.Row="1"
-                        Margin="12,0,12,4"
-                        Padding="8,0"
-                        CornerRadius="8"
-                        Background="{DynamicResource surface}"
-                    >
-                        <Grid ColumnDefinitions="32,*">
-                            <ContentControl
-                                x:Name="SearchIconHost"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                            />
-                            <TextBox
-                                x:Name="SearchInput"
-                                Grid.Column="1"
-                                Classes="search"
-                                PlaceholderText="Поиск людей и сообщений"
-                            />
-                        </Grid>
-                    </Border>
+                    <TextBlock x:Name="StatusText" Grid.Row="1" Margin="12,2,12,4" IsVisible="False"
+                               FontSize="11" LineHeight="16.8" TextWrapping="Wrap"
+                               Foreground="{DynamicResource muted}" />
                     <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel x:Name="NavigationPanel" Spacing="4" Margin="12,8" />
                     </ScrollViewer>
@@ -88,11 +59,11 @@
             <Grid x:Name="ConversationPanel" Grid.Column="2" />
             <Border x:Name="MembersPanel" Grid.Column="3" Background="{DynamicResource panel}">
                 <ScrollViewer>
-                    <StackPanel x:Name="MemberListPanel" Spacing="20" Margin="20" />
+                    <StackPanel x:Name="MemberListPanel" Spacing="8" Margin="12" />
                 </ScrollViewer>
             </Border>
         </Grid>
-        <Border x:Name="BottomBar" Grid.Row="2" Padding="4,4" Background="{DynamicResource chrome}">
+        <Border x:Name="BottomBar" Grid.Row="1" Padding="4,4" Background="{DynamicResource chrome}">
             <Grid x:Name="BottomNavigationGrid" ColumnDefinitions="*,*,*,*" />
         </Border>
     </Grid>

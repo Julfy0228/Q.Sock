@@ -18,6 +18,7 @@ public sealed partial class MessengerView
     private CallInfo[] availableCalls = [];
     private MemberInfo[] conversationMembers = [];
     private bool composingLayout;
+    private bool? membersOpen;
 
     private string DisplayName =>
         string.IsNullOrWhiteSpace(profile?.DisplayName)
@@ -30,15 +31,11 @@ public sealed partial class MessengerView
         loginView = null;
         root.Children.Clear();
         workspace.IsVisible = true;
-        workspaceView.SetIdentity($"{DisplayName} · {client!.Server.Host}");
-        workspaceView.SetActions(NavigationMenu(), NavigationMenu());
+        status.Text = "";
         navigationSearch.TextChanged -= NavigationSearchChanged;
         navigationSearch.TextChanged += NavigationSearchChanged;
         root.Children.Add(workspaceView);
-        ShowEmptyConversation(
-            "Выберите чат",
-            "Личные и групповые чаты, каналы и голосовые комнаты."
-        );
+        ShowEmptyConversation("Выберите чат", "");
         RebuildNavigation();
         UpdateLayoutMode();
     }
@@ -60,7 +57,10 @@ public sealed partial class MessengerView
             if (dialog?.Child is Border card)
                 card.MaxHeight = Math.Max(0, Bounds.Height - 32);
             var narrow = Bounds.Width < 760;
-            workspaceView.SetLayout(Bounds.Width, showConversation, selectedChat?.Type == "direct");
+            workspaceView.SetLayout(
+                Bounds.Width, showConversation, selectedChat?.Type == "direct", membersOpen,
+                profilePage: navigationSection == "Профиль"
+            );
             messageList.Margin = new Thickness(narrow ? 16 : 28, 20);
             if (conversationHeaderTitle is not null)
                 conversationHeaderTitle.FontSize = narrow ? 18 : 24;
@@ -76,11 +76,9 @@ public sealed partial class MessengerView
     private void ShowEmptyConversation(string title, string description)
     {
         conversation.Children.Clear();
-        var content = Column(
-            Avatar("М", 72),
-            Text(title, 24, strong: true),
-            Text(description, 14, "secondary")
-        );
+        var content = Column(Text(title, 24, strong: true));
+        if (description.Length != 0)
+            content.Children.Add(Text(description, 14, "secondary"));
         content.MaxWidth = 360;
         content.Margin = new Thickness(28);
         content.HorizontalAlignment = HorizontalAlignment.Center;
@@ -88,35 +86,18 @@ public sealed partial class MessengerView
         conversation.Children.Add(content);
     }
 
-    private Button NavigationMenu()
+    private Control? WorkspaceActions()
     {
-        var button = IconButton("MoreHoriz", "Действия", () => Task.CompletedTask, compact: true);
-        var menu = new ContextMenu();
-        void AddAction(string label, Func<Task> action)
-        {
-            var item = new MenuItem { Header = label };
-            item.Click += async (_, _) => await Run(action);
-            menu.Items.Add(item);
-        }
-        AddAction("Новый чат или канал", CreateChat);
-        AddAction("Создать пространство", CreateGuild);
-        AddAction("Люди и друзья", ShowContacts);
         if (selectedGuild is not null)
-            AddAction("Настройки пространства", ShowSpace);
-        AddAction("Настройки и аккаунты", ShowSettings);
-        AddAction("Модули интерфейса", ShowClientPlugins);
-        AddAction("Справка Q.Sock", ShowDocumentation);
-        foreach (
-            var plugin in externalPlugins.Values.Where(plugin =>
-                plugin.Package.Slot is "action" or "workspace"
-            )
-        )
+            return Row(
+                IconButton("SettingsOutlined", "Настройки пространства", () => Run(ShowSpace), compact: true),
+                IconButton("Add", "Новый канал", () => Run(CreateChat), compact: true)
+            );
+        return navigationSection switch
         {
-            var current = plugin;
-            AddAction(current.Package.Title, () => OpenClientPlugin(current));
-        }
-        button.ContextMenu = menu;
-        button.Click += (_, _) => menu.Open(button);
-        return button;
+            "Чаты" => IconButton("Add", "Новый чат", () => Run(CreateChat), compact: true),
+            "Пространства" => IconButton("Add", "Создать пространство", () => Run(CreateGuild), compact: true),
+            _ => null,
+        };
     }
 }

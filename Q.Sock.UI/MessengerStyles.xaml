@@ -138,6 +138,12 @@
         <Setter Property="Background" Value="{DynamicResource danger}" />
         <Setter Property="Foreground" Value="White" />
     </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource dangerHover}" />
+    </Style>
+    <Style Selector="MenuItem.danger">
+        <Setter Property="Foreground" Value="{DynamicResource dangerText}" />
+    </Style>
     <Style Selector="TextBox.composer">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />

@@ -50,7 +50,7 @@ public sealed partial class MessengerView
             var id = request.GetProperty("id").GetGuid();
             var item = Column(Text(request.GetProperty("name").GetString() ?? "Пространство"));
             item.Children.Add(
-                Button(
+                Danger(
                     "Подтвердить удаление",
                     () =>
                         Run(async () =>

@@ -1,8 +1,6 @@
 using Avalonia;
-using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using Q.Sock.Core;
 using Q.Sock.Shared.Models;
@@ -14,7 +12,6 @@ namespace Q.Sock.UI;
 public sealed partial class MessengerView
 {
     private TextBlock? conversationHeaderTitle;
-    private TextBlock? conversationSubtitle;
     private Button? conversationBack;
     private Button? sendMessageButton;
     private Button? attachFileButton;
@@ -53,18 +50,9 @@ public sealed partial class MessengerView
             24,
             strong: true
         );
-        conversationSubtitle = Text(
-            chat.Managed ? "Управляется интеграцией"
-                : chat.Type == "direct" ? "Личный чат"
-                : "Участники чата",
-            11,
-            "muted"
-        );
-        var heading = Column(conversationHeaderTitle, conversationSubtitle);
-        heading.Spacing = 2;
-        heading.VerticalAlignment = VerticalAlignment.Center;
-        Grid.SetColumn(heading, 1);
-        toolbar.Children.Add(heading);
+        conversationHeaderTitle.VerticalAlignment = VerticalAlignment.Center;
+        Grid.SetColumn(conversationHeaderTitle, 1);
+        toolbar.Children.Add(conversationHeaderTitle);
         var actions = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -73,10 +61,11 @@ public sealed partial class MessengerView
         };
         if (chat.Type != "room")
             actions.Children.Add(IconButton("Call", "Звонок", () => Run(StartCall), compact: true));
-        actions.Children.Add(
-            IconButton("PeopleOutlined", "Участники", () => Run(ShowMembers), compact: true)
-        );
-        actions.Children.Add(ConversationMenu(chat));
+        if (chat.Type != "direct")
+            actions.Children.Add(IconButton("PeopleOutlined", "Участники", ToggleMembers, compact: true));
+        actions.Children.Add(IconButton("Search", "Поиск сообщений", () => Run(SearchMessages), compact: true));
+        if (PluginActions(ClientUiLocation.Chat) is { Count: > 0 } pluginActions)
+            actions.Children.Add(ConversationMenu(pluginActions));
         Grid.SetColumn(actions, 2);
         toolbar.Children.Add(actions);
         content.Children.Add(Surface(toolbar, "panel"));
@@ -126,7 +115,7 @@ public sealed partial class MessengerView
         RefreshAttachments();
     }
 
-    private Button ConversationMenu(ChatInfo chat)
+    private Button ConversationMenu(IReadOnlyList<ClientUiAction> actions)
     {
         var button = IconButton(
             "MoreHoriz",
@@ -141,9 +130,7 @@ public sealed partial class MessengerView
             item.Click += async (_, _) => await Run(action);
             menu.Items.Add(item);
         }
-        AddAction("Поиск сообщений", SearchMessages);
-        AddAction("Участники", ShowMembers);
-        foreach (var action in PluginActions(ClientUiLocation.Chat))
+        foreach (var action in actions)
             AddAction(action.Title, action.Execute);
         button.ContextMenu = menu;
         button.Click += (_, _) => menu.Open(button);
@@ -152,46 +139,43 @@ public sealed partial class MessengerView
 
     private async Task LoadConversationMembers()
     {
-        if (client is null || selectedChat is null)
+        if (client is not { } source || selectedChat is not { } chat)
             return;
-        var id = selectedChat.Id;
-        var members = await client.Get<MemberInfo[]>($"api/chats/{id}/members");
-        if (selectedChat?.Id != id)
+        var members = await source.Get<MemberInfo[]>($"api/chats/{chat.Id}/members");
+        if (client != source || selectedChat?.Id != chat.Id)
             return;
         conversationMembers = members;
-        if (conversationSubtitle is not null)
-            conversationSubtitle.Text =
-                selectedChat.Type == "direct" ? "Личный чат" : $"{members.Length} участников";
-        memberList.Children.Clear();
-        memberList.Children.Add(Text($"Участники · {members.Length}", 18, strong: true));
-        foreach (
-            var member in members
-                .OrderByDescending(member => member.Role == "owner")
-                .ThenBy(member => member.DisplayName)
-        )
-        {
-            var name = string.IsNullOrWhiteSpace(member.DisplayName)
-                ? member.UserName
-                : member.DisplayName;
-            var row = new Grid
-            {
-                ColumnDefinitions = new ColumnDefinitions("32,*"),
-                ColumnSpacing = 10,
-            };
-            row.Children.Add(Avatar(name, member.UserId, AvatarKind.User, 32));
-            var copy = Column(Ellipsis(name, 13, "secondary"));
-            copy.Spacing = 1;
-            if (member.Role != "member")
-                copy.Children.Add(Text(ExtensionRoleCaption(member.Role), 11, "muted"));
-            Grid.SetColumn(copy, 1);
-            row.Children.Add(copy);
-            memberList.Children.Add(row);
-        }
-        if (selectedChat.Managed)
-            memberList.Children.Add(Text(ManagedDescription(), 12, "muted"));
-        if (selectedChat.CanManage && selectedChat.Type != "direct")
-            memberList.Children.Add(Button("Управление участниками", () => Run(ShowMembers)));
+        if (chat.Type != "direct")
+            BuildMemberPanel(source, chat, members);
         UpdateComposer();
+    }
+
+    private Task ToggleMembers()
+    {
+        membersOpen = !Views.WorkspaceView.ShowsMembers(Bounds.Width, membersOpen);
+        UpdateLayoutMode();
+        return Task.CompletedTask;
+    }
+
+    private void BuildMemberPanel(MessengerClient source, ChatInfo chat, MemberInfo[] members)
+    {
+        memberList.Children.Clear();
+        var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        var title = Text($"Участники · {members.Length}", 16, strong: true);
+        title.VerticalAlignment = VerticalAlignment.Center;
+        heading.Children.Add(title);
+        var close = IconButton("Close", "Закрыть список участников", ToggleMembers, compact: true);
+        Grid.SetColumn(close, 1);
+        heading.Children.Add(close);
+        memberList.Children.Add(heading);
+        if (CanManageChat(chat) && !chat.Managed && chat.GuildId is null && chat.Type == "group")
+            memberList.Children.Add(Button("Добавить участника", () => Run(() => AddChatMember(source, chat))));
+        foreach (var member in members.OrderByDescending(member => member.Role == "owner").ThenBy(MemberName))
+        {
+            memberList.Children.Add(ChatMemberRow(source, chat, member));
+        }
+        if (chat.Managed)
+            memberList.Children.Add(Text(ManagedDescription(), 12, "muted"));
     }
 
     private void RefreshLessonBanner()

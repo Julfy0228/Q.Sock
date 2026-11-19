@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Q.Sock.Core;
 using Q.Sock.Shared.Models;
 using Q.Sock.UI.Plugins;
+using Q.Sock.UI.Views;
 using static Q.Sock.UI.UiFactory;
 
 namespace Q.Sock.UI;
@@ -18,10 +19,11 @@ public sealed partial class MessengerView
         sidebarTitle.Text = selectedGuild is { } guildId
             ? guilds.FirstOrDefault(guild => guild.Id == guildId)?.Name ?? "Пространство"
             : navigationSection;
-        status.Text = $"Подключено · {DisplayName}";
+        sidebarTitle.IsVisible = navigationSection is not ("Чаты" or "Профиль") || selectedGuild is not null;
+        workspaceView.SetActions(WorkspaceActions());
         railItems.Children.Clear();
         var home = Button("Личные и групповые чаты", () => NavigateTo("Чаты"));
-        home.Content = Avatar("М", 48, navigationSection == "Чаты");
+        home.Content = new LogoMark { Width = 48, Height = 48 };
         home.Classes.Add("icon");
         home.Width = home.Height = 48;
         railItems.Children.Add(home);
@@ -38,7 +40,6 @@ public sealed partial class MessengerView
         railItems.Children.Add(
             IconButton("Add", "Создать пространство", () => Run(CreateGuild), compact: true)
         );
-        railItems.Children.Add(new Separator());
         railItems.Children.Add(
             IconButton(
                 "GroupsOutlined",
@@ -50,9 +51,10 @@ public sealed partial class MessengerView
         railItems.Children.Add(
             IconButton("CallOutlined", "Звонки", () => NavigateTo("Звонки"), compact: true)
         );
-        railItems.Children.Add(
-            IconButton("PersonOutlined", "Профиль", () => NavigateTo("Профиль"), compact: true)
-        );
+        var profileButton = IconButton("PersonOutlined", "Профиль", () => NavigateTo("Профиль"), compact: true);
+        if (profile is not null)
+            profileButton.Content = Avatar(DisplayName, profile.Id, AvatarKind.User, 34);
+        railItems.Children.Add(profileButton);
         foreach (var action in PluginActions(ClientUiLocation.Sidebar))
             railItems.Children.Add(
                 IconButton(action.Icon, action.Title, () => Run(action.Execute), compact: true)
@@ -150,9 +152,6 @@ public sealed partial class MessengerView
             );
         if (selectedGuild is not null)
         {
-            navigation.Children.Add(
-                IconButton("AddComment", "Чат или канал", () => Run(CreateChat))
-            );
             foreach (var action in PluginActions(ClientUiLocation.Workspace))
                 navigation.Children.Add(
                     IconButton(action.Icon, action.Title, () => Run(action.Execute))
@@ -170,14 +169,14 @@ public sealed partial class MessengerView
         navigationSearch.Text = "";
         ShowEmptyConversation(
             section == "Профиль" ? DisplayName : "Выберите чат",
-            "Личные чаты, группы и пространства."
+            ""
         );
         RebuildNavigation();
         UpdateLayoutMode();
         return Task.CompletedTask;
     }
 
-    private Task NavigateToGuild(GuildInfo guild)
+    private async Task NavigateToGuild(GuildInfo guild)
     {
         navigationSection = "Пространства";
         selectedGuild = guild.Id;
@@ -188,7 +187,16 @@ public sealed partial class MessengerView
         ShowEmptyConversation(guild.Name, "Выберите текстовый канал или голосовую комнату.");
         RebuildNavigation();
         UpdateLayoutMode();
-        return Task.CompletedTask;
+        if (Bounds.Width >= 760)
+        {
+            var channel = chats
+                .Where(chat => chat.GuildId == guild.Id && chat.Type == "channel")
+                .OrderByDescending(chat => chat.Name == "Общий")
+                .ThenBy(chat => chat.Name)
+                .FirstOrDefault();
+            if (channel is not null)
+                await Run(() => SelectChat(channel));
+        }
     }
 
     private void BuildBottomNavigation()
@@ -199,16 +207,17 @@ public sealed partial class MessengerView
             ("Чаты", "ChatBubbleOutlineOutlined"),
             ("Пространства", "GroupsOutlined"),
             ("Звонки", "CallOutlined"),
-            ("Профиль", "SettingsOutlined"),
+            ("Профиль", "PersonOutlined"),
         };
         for (var index = 0; index < sections.Length; index++)
         {
             var (name, icon) = sections[index];
             var active = navigationSection == name;
-            var content = Column(
-                new MaterialIcon(icon, 24) { HorizontalAlignment = HorizontalAlignment.Center },
-                Text(name, 11, active ? "text" : "muted", active)
-            );
+            Control tabIcon = name == "Профиль" && profile is not null
+                ? Avatar(DisplayName, profile.Id, AvatarKind.User, 24)
+                : new MaterialIcon(icon, 24);
+            tabIcon.HorizontalAlignment = HorizontalAlignment.Center;
+            var content = Column(tabIcon, Text(name, 11, active ? "text" : "muted", active));
             content.Spacing = 4;
             content.HorizontalAlignment = HorizontalAlignment.Center;
             var button = Button(name, () => NavigateTo(name));
@@ -380,41 +389,45 @@ public sealed partial class MessengerView
 
     private void BuildProfileNavigation()
     {
-        navigation.Children.Add(
-            IconButton("HelpOutlined", "Справка Q.Sock", ShowDocumentation)
-        );
-        navigation.Children.Add(
-            Card(
-                Column(
-                    Avatar(DisplayName, profile!.Id, AvatarKind.User, 58),
-                    Text(DisplayName, 18, strong: true),
-                    Text(client?.Server.Host ?? "", 12, "muted")
-                )
-            )
-        );
-        navigation.Children.Add(
+        navigation.Children.Add(Text("Профиль", 24, strong: true));
+        var identity = new Grid { ColumnDefinitions = new ColumnDefinitions("58,*"), ColumnSpacing = 14 };
+        identity.Children.Add(Avatar(DisplayName, profile!.Id, AvatarKind.User, 58));
+        var details = Column(Text(DisplayName, 18, strong: true), Text(client?.Server.Host ?? "", 12, "muted"));
+        details.Spacing = 4;
+        details.VerticalAlignment = VerticalAlignment.Center;
+        Grid.SetColumn(details, 1);
+        identity.Children.Add(details);
+        navigation.Children.Add(Surface(identity, "surface", new Thickness(16), 12));
+        var actions = new StackPanel { Spacing = 8 };
+        actions.Children.Add(
             IconButton("Devices", "Устройства и сессии", () => Run(ShowSettings))
         );
-        navigation.Children.Add(
+        actions.Children.Add(
             IconButton("PaletteOutlined", "Оформление", () => Run(ShowThemeEditor))
         );
-        navigation.Children.Add(
+        actions.Children.Add(
             IconButton("PeopleOutlined", "Люди и друзья", () => Run(ShowContacts))
         );
-        navigation.Children.Add(
+        actions.Children.Add(
             IconButton("ExtensionOutlined", "Модули интерфейса", () => Run(ShowClientPlugins))
         );
-        navigation.Children.Add(
+        actions.Children.Add(
             IconButton("SettingsOutlined", "Настройки и аккаунты", () => Run(ShowSettings))
         );
         if (profile?.IsAdmin == true)
-            navigation.Children.Add(
+            actions.Children.Add(
                 IconButton(
                     "AdminPanelSettingsOutlined",
                     "Управление сервером",
                     () => Run(ShowAdmin)
                 )
             );
+        foreach (var plugin in externalPlugins.Values.Where(plugin => plugin.Package.Slot is "action" or "workspace"))
+            actions.Children.Add(Button(plugin.Package.Title, () => Run(() => OpenClientPlugin(plugin))));
+        foreach (var button in actions.Children.OfType<Button>())
+            button.HorizontalAlignment = HorizontalAlignment.Stretch;
+        navigation.Children.Add(actions);
+        navigation.Children.Add(IconButton("HelpOutlined", "Справка Q.Sock", ShowDocumentation));
     }
 
     private void BuildCallsNavigation()

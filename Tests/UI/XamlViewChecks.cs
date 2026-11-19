@@ -200,10 +200,10 @@ internal static class XamlViewChecks
             view,
             window =>
             {
-                void Arrange(double width, bool showingConversation, bool directChat)
+                void Arrange(double width, bool showingConversation, bool directChat, bool? membersOpen = null)
                 {
                     window.Width = width;
-                    view.SetLayout(width, showingConversation, directChat);
+                    view.SetLayout(width, showingConversation, directChat, membersOpen);
                     Dispatcher.UIThread.RunJobs();
                     window.UpdateLayout();
                 }
@@ -236,9 +236,19 @@ internal static class XamlViewChecks
                 );
                 Arrange(760, false, false);
                 Check(
-                    view.FindControl<Border>("DesktopHeader")!.IsVisible
-                        && !view.FindControl<Border>("BottomBar")!.IsVisible,
+                    sidebar.IsEffectivelyVisible && !view.FindControl<Border>("BottomBar")!.IsVisible,
                     "Граница адаптивности изменилась."
+                );
+                Arrange(390, true, false, true);
+                Check(
+                    members.IsEffectivelyVisible && !view.Conversation.IsVisible
+                        && members.Bounds.Width == view.Workspace.Bounds.Width,
+                    "На телефоне список участников должен заменять переписку."
+                );
+                Arrange(1280, true, false, false);
+                Check(
+                    !members.IsVisible && view.Conversation.Bounds.Right == view.Workspace.Bounds.Width,
+                    "Закрытая панель не должна занимать место."
                 );
             }
         );
